@@ -1,2 +1,2 @@
 # finalYearProject
-My final year project ode
+PMBus GUI for Smart Power Device

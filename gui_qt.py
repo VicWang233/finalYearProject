@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
+import sys
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -22,47 +23,50 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
+
 class Ui_MainWindow(object):
 
-    def setupUi(self, MainWindow):
+    def setstyle(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(901, 577)
         MainWindow.setStyleSheet(_fromUtf8("QFrame{\n"
-        "background-color:rgb(255, 255, 255);\n"
-        "border: 1px solid rgb(147, 147, 147)\n"
-        "}\n"
-        "\n"
-        "QLabel{\n"
-        "border:none;\n"
-        "background-color:transparent;\n"
-        "}\n"
-        "\n"
-        "QToolButton{\n"
-        "background-color:transparent;\n"
-        "border:none;\n"
-        "}\n"
-        "\n"
-        "QToolButton:pressed{\n"
-        "background-color:rgb(231, 226, 221);\n"
-        "border: 1px solid rgb(147, 147, 147);\n"
-        "}\n"
-        "\n"
-        "QToolButton:checked{\n"
-        "background-color:rgb(231, 226, 221);\n"
-        "border: 1px solid rgb(147, 147, 147);\n"
-        "}\n"
-        "\n"
-        "QToolButton:hover {\n"
-        "background-color:rgb(188, 188, 188);\n"
-        "}\n"
-        "\n"
-        "QStackedWidget {\n"
-        "background-color:rgb(220, 228, 244);\n"
-        "border: 1px solid rgb(147, 147, 147)\n"
-        "}"))
+                                           "background-color:rgb(255, 255, 255);\n"
+                                           "border: 1px solid rgb(147, 147, 147)\n"
+                                           "}\n"
+                                           "\n"
+                                           "QLabel{\n"
+                                           "border:none;\n"
+                                           "background-color:transparent;\n"
+                                           "}\n"
+                                           "\n"
+                                           "QToolButton{\n"
+                                           "background-color:transparent;\n"
+                                           "border:none;\n"
+                                           "}\n"
+                                           "\n"
+                                           "QToolButton:pressed{\n"
+                                           "background-color:rgb(231, 226, 221);\n"
+                                           "border: 1px solid rgb(147, 147, 147);\n"
+                                           "}\n"
+                                           "\n"
+                                           "QToolButton:checked{\n"
+                                           "background-color:rgb(231, 226, 221);\n"
+                                           "border: 1px solid rgb(147, 147, 147);\n"
+                                           "}\n"
+                                           "\n"
+                                           "QToolButton:hover {\n"
+                                           "background-color:rgb(188, 188, 188);\n"
+                                           "}\n"
+                                           "\n"
+                                           "QStackedWidget {\n"
+                                           "background-color:rgb(220, 228, 244);\n"
+                                           "border: 1px solid rgb(147, 147, 147)\n"
+                                           "}"))
 
-        self.centralwidget = QtGui.QWidget(MainWindow)
-        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
+    def menu(self, centralwidget):
+
+        # create new buttons_frame and put menu buttons in there
+
         self.buttons_frame = QtGui.QFrame(self.centralwidget)
         self.buttons_frame.setGeometry(QtCore.QRect(180, 10, 711, 71))
         self.buttons_frame.setStyleSheet(_fromUtf8(""))
@@ -73,6 +77,7 @@ class Ui_MainWindow(object):
         self.main_but = QtGui.QToolButton(self.buttons_frame)
         self.main_but.setGeometry(QtCore.QRect(10, 10, 131, 51))
         self.main_but.setCheckable(True)
+        self.main_but.setChecked(True)
         self.main_but.setAutoExclusive(True)
         self.main_but.setObjectName(_fromUtf8("main_but"))
         self.main_but.clicked.connect(self.page1)
@@ -105,19 +110,24 @@ class Ui_MainWindow(object):
         self.monitor_but.setObjectName(_fromUtf8("monitor_but"))
         self.monitor_but.clicked.connect(self.page5)
 
-        self.stackedWidget = QtGui.QStackedWidget(self.centralwidget)
-        self.stackedWidget.setGeometry(QtCore.QRect(180, 90, 711, 431))
-        self.stackedWidget.setAutoFillBackground(False)
-        self.stackedWidget.setStyleSheet(_fromUtf8(""))
-        self.stackedWidget.setObjectName(_fromUtf8("stackedWidget"))
+    def page1Main(self, stackedWidget):
         self.page = QtGui.QWidget()
         self.page.setObjectName(_fromUtf8("page"))
         self.voltage_box = QtGui.QGroupBox(self.page)
         self.voltage_box.setGeometry(QtCore.QRect(260, 190, 371, 131))
         self.voltage_box.setObjectName(_fromUtf8("voltage_box"))
+
         self.vin_value_main = QtGui.QLineEdit(self.voltage_box)
         self.vin_value_main.setGeometry(QtCore.QRect(60, 50, 81, 21))
         self.vin_value_main.setObjectName(_fromUtf8("vin_value_main"))
+
+        # !! ReGex implementation !!
+        # For more details about ReGex search on google: regex rules or something similar
+        reg_ex = QtCore.QRegExp("[0-9]\.?[0-9]\.?[0-9]+")
+        text_validator = QtGui.QRegExpValidator(reg_ex, self.vin_value_main)
+        self.vin_value_main.setValidator(text_validator)
+        # !! ReGex implementation End !!
+
         self.vout_value_main = QtGui.QLineEdit(self.voltage_box)
         self.vout_value_main.setGeometry(QtCore.QRect(60, 100, 81, 21))
         self.vout_value_main.setObjectName(_fromUtf8("vout_value_main"))
@@ -155,6 +165,8 @@ class Ui_MainWindow(object):
         self.margin_low_label.setGeometry(QtCore.QRect(270, 50, 61, 20))
         self.margin_low_label.setObjectName(_fromUtf8("margin_low_label"))
         self.stackedWidget.addWidget(self.page)
+
+    def page2Configuration(self, stackedWidget):
         self.page_2 = QtGui.QWidget()
         self.page_2.setObjectName(_fromUtf8("page_2"))
         self.configuration_box = QtGui.QGroupBox(self.page_2)
@@ -257,9 +269,13 @@ class Ui_MainWindow(object):
         self.graph_frame.setFrameShadow(QtGui.QFrame.Raised)
         self.graph_frame.setObjectName(_fromUtf8("graph_frame"))
         self.stackedWidget.addWidget(self.page_2)
+
+    def page3Pin(self, stackedWidget):
         self.page_3 = QtGui.QWidget()
         self.page_3.setObjectName(_fromUtf8("page_3"))
         self.stackedWidget.addWidget(self.page_3)
+
+    def page4Protection(self, stackedWidget):
         self.page_4 = QtGui.QWidget()
         self.page_4.setObjectName(_fromUtf8("page_4"))
         self.protection_box = QtGui.QGroupBox(self.page_4)
@@ -485,6 +501,8 @@ class Ui_MainWindow(object):
         self.temp_oc_falert.setText(_fromUtf8(""))
         self.temp_oc_falert.setObjectName(_fromUtf8("temp_oc_falert"))
         self.stackedWidget.addWidget(self.page_4)
+
+    def page5Monitor(self, stackedWidget):
         self.page_5 = QtGui.QWidget()
         self.page_5.setObjectName(_fromUtf8("page_5"))
         self.monitoring_box = QtGui.QGroupBox(self.page_5)
@@ -518,9 +536,8 @@ class Ui_MainWindow(object):
         self.temp_value.setGeometry(QtCore.QRect(90, 200, 46, 21))
         self.temp_value.setObjectName(_fromUtf8("temp_value"))
         self.stackedWidget.addWidget(self.page_5)
-        self.page_6 = QtGui.QWidget()
-        self.page_6.setObjectName(_fromUtf8("page_6"))
-        self.stackedWidget.addWidget(self.page_6)
+
+    def infoPanel(self, centralWidget):
         self.info_frame = QtGui.QFrame(self.centralwidget)
         self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 511))
         self.info_frame.setStyleSheet(_fromUtf8(""))
@@ -533,6 +550,44 @@ class Ui_MainWindow(object):
         self.textBrowser = QtGui.QTextBrowser(self.info_frame)
         self.textBrowser.setGeometry(QtCore.QRect(20, 70, 121, 192))
         self.textBrowser.setObjectName(_fromUtf8("textBrowser"))
+
+    def setupUi(self, MainWindow):
+        # set style of the main window
+        self.setstyle(MainWindow)
+
+        # create central widget
+        self.centralwidget = QtGui.QWidget(MainWindow)
+        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
+
+        # set menu buttons
+        self.menu(self.centralwidget)
+
+        # create stackedWidget (tabbed)
+        self.stackedWidget = QtGui.QStackedWidget(self.centralwidget)
+        self.stackedWidget.setGeometry(QtCore.QRect(180, 90, 711, 431))
+        self.stackedWidget.setAutoFillBackground(False)
+        self.stackedWidget.setStyleSheet(_fromUtf8(""))
+        self.stackedWidget.setObjectName(_fromUtf8("stackedWidget"))
+
+        # create page1
+        self.page1Main(self.stackedWidget)
+
+        # create page2
+        self.page2Configuration(self.stackedWidget)
+
+        # create page3
+        self.page3Pin(self.stackedWidget)
+
+        # create page4
+        self.page4Protection(self.stackedWidget)
+
+        # create page5
+        self.page5Monitor(self.stackedWidget)
+
+        # device info - left panel
+        self.infoPanel(self.centralwidget)
+
+        # menu bar & status bar
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 901, 21))

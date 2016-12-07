@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+
+# import the PyUSB module
+import ftd2xx
+import time
+
+def process():
+
+    # list devices by description, returns tuple of attached devices description strings
+    d = ftd2xx.listDevices()
+    print d
+
+    d = ftd2xx.getLibraryVersion()
+    #print d
+
+    try:
+        device = ftd2xx.open(0)
+        #print device
+    except ftd2xx.ftd2xx.DeviceError:
+        print "Unable to open 'EM2130 device'."
+        exit(1)
+
+    # read eeprom
+    #print device.eeRead()
+
+    # get queue status
+    #print device.getQueueStatus()
+
+    # set baud rate
+    device.setBaudRate(1000000)
+    # set data characteristics
+    device.setDataCharacteristics(ftd2xx.ftd2xx.BITS_8, ftd2xx.ftd2xx.STOP_BITS_1, ftd2xx.ftd2xx.PARITY_NONE)
+    # purge
+    device.purge()
+    # set RX/TX timeouts
+    device.setTimeouts(300, 300)
+    # set bit mode
+    device.setBitMode(0xFF, 0x40)
+    # set flow control
+    device.setFlowControl(ftd2xx.ftd2xx.FLOW_NONE, 0, 0)
+    # set chars
+    device.setChars(0x0A, 0x7F, 0, 0)
+    # set event notification
+    #device.setEventNotification(ftd2xx.ftd2xx.EVENT_RXCHAR, )
+
+    device.write("t11001\r\n")
+    time.sleep(0.001)  # allow 1ms delay between the commands
+    device.write("t_020\r\n")
+    time.sleep(0.001)
+    device.write("is_07\r\n")
+    time.sleep(0.001)
+    device.write("ip_0\r\n")
+    time.sleep(0.001)
+    if (device.getQueueStatus() > 0):
+        print device.read(device.getQueueStatus())
+
+    # read bytes (serial mode)
+
+    device.write("v\r\n")
+
+    time.sleep(0.001)
+
+    if (device.getQueueStatus() > 0):
+        i = device.read(device.getQueueStatus())
+        print "version = " + i
+
+    device.write("iq_3f010221\r\n") # 3f is my slave address
+    time.sleep(0.001)
+    if (device.getQueueStatus() > 0):
+        print device.read(device.getQueueStatus())
+
+
+    i = ftd2xx.getDeviceInfoDetail(0, True)
+    #print i
+
+
+
+
+def main():
+    process()
+    print('\nDone!')
+
+if __name__ == '__main__':
+    main()

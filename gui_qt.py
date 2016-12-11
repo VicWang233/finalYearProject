@@ -66,7 +66,6 @@ class Ui_MainWindow(object):
     def menu(self, centralwidget):
 
         # create new buttons_frame and put menu buttons in there
-
         self.buttons_frame = QtGui.QFrame(self.centralwidget)
         self.buttons_frame.setGeometry(QtCore.QRect(180, 10, 711, 71))
         self.buttons_frame.setStyleSheet(_fromUtf8(""))
@@ -74,194 +73,170 @@ class Ui_MainWindow(object):
         self.buttons_frame.setFrameShadow(QtGui.QFrame.Raised)
         self.buttons_frame.setObjectName(_fromUtf8("buttons_frame"))
 
-        self.main_but = QtGui.QToolButton(self.buttons_frame)
-        self.main_but.setGeometry(QtCore.QRect(10, 10, 131, 51))
-        self.main_but.setCheckable(True)
-        self.main_but.setChecked(True)
-        self.main_but.setAutoExclusive(True)
-        self.main_but.setObjectName(_fromUtf8("main_but"))
-        self.main_but.clicked.connect(self.page1)
+        # "main" button
+        self.create_button_tab(self.buttons_frame, 10, 10, 131, 51, "Main", self.page1)
+        # "configuration" button
+        self.create_button_tab(self.buttons_frame, 150, 10, 131, 51, "Configuration", self.page2)
+        # "pin" button
+        self.create_button_tab(self.buttons_frame, 290, 10, 131, 51, "Pin", self.page3)
+        # "protection" button
+        self.create_button_tab(self.buttons_frame, 430, 10, 131, 51, "Protection", self.page4)
+        # "monitor" button
+        self.create_button_tab(self.buttons_frame, 570, 10, 131, 51, "Monitoring", self.page5)
 
-        self.config_but = QtGui.QToolButton(self.buttons_frame)
-        self.config_but.setGeometry(QtCore.QRect(150, 10, 131, 51))
-        self.config_but.setCheckable(True)
-        self.config_but.setAutoExclusive(True)
-        self.config_but.setObjectName(_fromUtf8("config_but"))
-        self.config_but.clicked.connect(self.page2)
+    def text_validation(self, text_field):
+        # !! ReGex implementation !!
+        reg_ex = QtCore.QRegExp("[0-9]\.?[0-9]\.?[0-9]+")
+        text_validator = QtGui.QRegExpValidator(reg_ex, text_field)
+        text_field.setValidator(text_validator)
+        # !! ReGex implementation End !!
 
-        self.pin_but = QtGui.QToolButton(self.buttons_frame)
-        self.pin_but.setGeometry(QtCore.QRect(290, 10, 131, 51))
-        self.pin_but.setCheckable(True)
-        self.pin_but.setAutoExclusive(True)
-        self.pin_but.setObjectName(_fromUtf8("pin_but"))
-        self.pin_but.clicked.connect(self.page3)
+    def create_label(self, group, x, y, w, h, text):
+        label = QtGui.QLabel(group)
+        label.setGeometry(QtCore.QRect(x, y, w, h))
+        label.setText(_translate("MainWindow", text, None))
 
-        self.protec_but = QtGui.QToolButton(self.buttons_frame)
-        self.protec_but.setGeometry(QtCore.QRect(430, 10, 131, 51))
-        self.protec_but.setCheckable(True)
-        self.protec_but.setAutoExclusive(True)
-        self.protec_but.setObjectName(_fromUtf8("protec_but"))
-        self.protec_but.clicked.connect(self.page4)
+    def create_button_tab(self, frame, x, y, w, h, text, page):
+        button_tab = QtGui.QToolButton(frame)
+        button_tab.setGeometry(QtCore.QRect(x, y, w, h))
+        button_tab.setCheckable(True)
+        button_tab.setAutoExclusive(True)
+        button_tab.clicked.connect(page)
+        button_tab.setText(_translate("MainWindow", text, None))
 
-        self.monitor_but = QtGui.QToolButton(self.buttons_frame)
-        self.monitor_but.setGeometry(QtCore.QRect(570, 10, 131, 51))
-        self.monitor_but.setCheckable(True)
-        self.monitor_but.setAutoExclusive(True)
-        self.monitor_but.setObjectName(_fromUtf8("monitor_but"))
-        self.monitor_but.clicked.connect(self.page5)
+    def size_and_name(self, component, x, y, w, h, name):
+        component.setGeometry(QtCore.QRect(x, y, w, h))
+        component.setTitle(_translate("MainWindow", name, None))
 
-    def page1Main(self, stackedWidget):
+    def page1_main(self, stackedWidget):
+        # create page
         self.page = QtGui.QWidget()
         self.page.setObjectName(_fromUtf8("page"))
-        self.voltage_box = QtGui.QGroupBox(self.page)
-        self.voltage_box.setGeometry(QtCore.QRect(260, 190, 371, 131))
-        self.voltage_box.setObjectName(_fromUtf8("voltage_box"))
 
+        # create group box
+        self.power_stage_box = QtGui.QGroupBox(self.page)
+        self.size_and_name(self.power_stage_box, 19, 9, 671, 401, "Power Stage")
+
+        # frame for block diagram of EM2130
+        self.block_diagram_frame = QtGui.QFrame(self.power_stage_box)
+        self.block_diagram_frame.setGeometry(QtCore.QRect(20, 20, 451, 371))
+        self.block_diagram_frame.setFrameShape(QtGui.QFrame.StyledPanel)
+        self.block_diagram_frame.setFrameShadow(QtGui.QFrame.Raised)
+        self.block_diagram_frame.setObjectName(_fromUtf8("block_diagram_frame"))
+
+        # voltage group box
+        self.voltage_box = QtGui.QGroupBox(self.power_stage_box)
+        self.size_and_name(self.voltage_box, 480, 20, 181, 241, "Voltage")
+
+        # text fields for voltage group
         self.vin_value_main = QtGui.QLineEdit(self.voltage_box)
         self.vin_value_main.setGeometry(QtCore.QRect(60, 50, 81, 21))
         self.vin_value_main.setObjectName(_fromUtf8("vin_value_main"))
-
-        # !! ReGex implementation !!
-        # For more details about ReGex search on google: regex rules or something similar
-        reg_ex = QtCore.QRegExp("[0-9]\.?[0-9]\.?[0-9]+")
-        text_validator = QtGui.QRegExpValidator(reg_ex, self.vin_value_main)
-        self.vin_value_main.setValidator(text_validator)
-        # !! ReGex implementation End !!
+        self.text_validation(self.vin_value_main)  # validate user input
 
         self.vout_value_main = QtGui.QLineEdit(self.voltage_box)
-        self.vout_value_main.setGeometry(QtCore.QRect(60, 100, 81, 21))
+        self.vout_value_main.setGeometry(QtCore.QRect(60, 90, 81, 21))
         self.vout_value_main.setObjectName(_fromUtf8("vout_value_main"))
+        self.text_validation(self.vout_value_main)  # validate user input
+
         self.margin_high = QtGui.QLineEdit(self.voltage_box)
-        self.margin_high.setGeometry(QtCore.QRect(190, 80, 51, 21))
+        self.margin_high.setGeometry(QtCore.QRect(90, 170, 51, 21))
         self.margin_high.setObjectName(_fromUtf8("margin_high"))
+        self.text_validation(self.margin_high)  # validate user input
+
         self.margin_low = QtGui.QLineEdit(self.voltage_box)
-        self.margin_low.setGeometry(QtCore.QRect(270, 80, 51, 21))
+        self.margin_low.setGeometry(QtCore.QRect(90, 210, 51, 21))
         self.margin_low.setObjectName(_fromUtf8("margin_low"))
-        self.vin_label_main = QtGui.QLabel(self.voltage_box)
-        self.vin_label_main.setGeometry(QtCore.QRect(20, 50, 21, 20))
-        self.vin_label_main.setObjectName(_fromUtf8("vin_label_main"))
-        self.vout_label_main = QtGui.QLabel(self.voltage_box)
-        self.vout_label_main.setGeometry(QtCore.QRect(20, 100, 31, 20))
-        self.vout_label_main.setObjectName(_fromUtf8("vout_label_main"))
-        self.label_3 = QtGui.QLabel(self.voltage_box)
-        self.label_3.setGeometry(QtCore.QRect(150, 50, 21, 20))
-        self.label_3.setObjectName(_fromUtf8("label_3"))
-        self.label_4 = QtGui.QLabel(self.voltage_box)
-        self.label_4.setGeometry(QtCore.QRect(150, 100, 21, 20))
-        self.label_4.setObjectName(_fromUtf8("label_4"))
-        self.procent_label1 = QtGui.QLabel(self.voltage_box)
-        self.procent_label1.setGeometry(QtCore.QRect(250, 80, 21, 20))
-        self.procent_label1.setObjectName(_fromUtf8("procent_label1"))
-        self.procent_label2 = QtGui.QLabel(self.voltage_box)
-        self.procent_label2.setGeometry(QtCore.QRect(330, 80, 21, 20))
-        self.procent_label2.setObjectName(_fromUtf8("procent_label2"))
-        self.nominal_label = QtGui.QLabel(self.voltage_box)
-        self.nominal_label.setGeometry(QtCore.QRect(60, 20, 61, 20))
-        self.nominal_label.setObjectName(_fromUtf8("nominal_label"))
-        self.margin_high_label = QtGui.QLabel(self.voltage_box)
-        self.margin_high_label.setGeometry(QtCore.QRect(190, 50, 61, 20))
-        self.margin_high_label.setObjectName(_fromUtf8("margin_high_label"))
-        self.margin_low_label = QtGui.QLabel(self.voltage_box)
-        self.margin_low_label.setGeometry(QtCore.QRect(270, 50, 61, 20))
-        self.margin_low_label.setObjectName(_fromUtf8("margin_low_label"))
+        self.text_validation(self.margin_low)  # validate user input
+
+        # define labels
+        self.create_label(self.voltage_box, 20, 50, 21, 20, "VIN")
+        self.create_label(self.voltage_box, 20, 90, 31, 20, "VOUT")
+        self.create_label(self.voltage_box, 150, 50, 21, 20, "V")
+        self.create_label(self.voltage_box, 150, 90, 21, 20, "V")
+        self.create_label(self.voltage_box, 150, 170, 21, 20, "%")
+        self.create_label(self.voltage_box, 150, 210, 21, 20, "%")
+        self.create_label(self.voltage_box, 60, 20, 61, 20, "Nominal")
+        self.create_label(self.voltage_box, 20, 170, 61, 20, "Margin High")
+        self.create_label(self.voltage_box, 20, 210, 61, 20, "Margin Low")
+
         self.stackedWidget.addWidget(self.page)
 
-    def page2Configuration(self, stackedWidget):
+    def page2_configuration(self, stackedWidget):
+
+        # create page 2
         self.page_2 = QtGui.QWidget()
         self.page_2.setObjectName(_fromUtf8("page_2"))
+
+        # create configuration group box
         self.configuration_box = QtGui.QGroupBox(self.page_2)
-        self.configuration_box.setGeometry(QtCore.QRect(20, 10, 671, 401))
-        self.configuration_box.setObjectName(_fromUtf8("configuration_box"))
-        self.dev_rise = QtGui.QLabel(self.configuration_box)
-        self.dev_rise.setGeometry(QtCore.QRect(10, 330, 61, 20))
-        self.dev_rise.setObjectName(_fromUtf8("dev_rise"))
-        self.dev_fall = QtGui.QLabel(self.configuration_box)
-        self.dev_fall.setGeometry(QtCore.QRect(10, 360, 61, 20))
-        self.dev_fall.setObjectName(_fromUtf8("dev_fall"))
-        self.delay = QtGui.QLabel(self.configuration_box)
-        self.delay.setGeometry(QtCore.QRect(90, 290, 31, 20))
-        self.delay.setObjectName(_fromUtf8("delay"))
-        self.ton_delay_label = QtGui.QLabel(self.configuration_box)
-        self.ton_delay_label.setGeometry(QtCore.QRect(90, 330, 61, 20))
-        self.ton_delay_label.setObjectName(_fromUtf8("ton_delay_label"))
-        self.toff_delay_label = QtGui.QLabel(self.configuration_box)
-        self.toff_delay_label.setGeometry(QtCore.QRect(90, 360, 61, 20))
-        self.toff_delay_label.setObjectName(_fromUtf8("toff_delay_label"))
-        self.ton_rise_label = QtGui.QLabel(self.configuration_box)
-        self.ton_rise_label.setGeometry(QtCore.QRect(250, 330, 61, 20))
-        self.ton_rise_label.setObjectName(_fromUtf8("ton_rise_label"))
-        self.toff_fall_label = QtGui.QLabel(self.configuration_box)
-        self.toff_fall_label.setGeometry(QtCore.QRect(250, 360, 61, 20))
-        self.toff_fall_label.setObjectName(_fromUtf8("toff_fall_label"))
-        self.ton_max_label = QtGui.QLabel(self.configuration_box)
-        self.ton_max_label.setGeometry(QtCore.QRect(410, 330, 51, 20))
-        self.ton_max_label.setObjectName(_fromUtf8("ton_max_label"))
-        self.toff_max_label = QtGui.QLabel(self.configuration_box)
-        self.toff_max_label.setGeometry(QtCore.QRect(410, 360, 61, 20))
-        self.toff_max_label.setObjectName(_fromUtf8("toff_max_label"))
-        self.label_39 = QtGui.QLabel(self.configuration_box)
-        self.label_39.setGeometry(QtCore.QRect(210, 330, 21, 20))
-        self.label_39.setObjectName(_fromUtf8("label_39"))
-        self.label_40 = QtGui.QLabel(self.configuration_box)
-        self.label_40.setGeometry(QtCore.QRect(210, 360, 21, 20))
-        self.label_40.setObjectName(_fromUtf8("label_40"))
-        self.label_41 = QtGui.QLabel(self.configuration_box)
-        self.label_41.setGeometry(QtCore.QRect(370, 330, 21, 20))
-        self.label_41.setObjectName(_fromUtf8("label_41"))
-        self.label_42 = QtGui.QLabel(self.configuration_box)
-        self.label_42.setGeometry(QtCore.QRect(370, 360, 21, 20))
-        self.label_42.setObjectName(_fromUtf8("label_42"))
+        self.size_and_name(self.configuration_box, 19, 9, 671, 401, "Sequencing")
+
+        # define labels
+        self.create_label(self.configuration_box, 10, 330, 61, 20, "Device Rise:")
+        self.create_label(self.configuration_box, 10, 360, 61, 20, "Device Fall:")
+        self.create_label(self.configuration_box, 90, 290, 31, 20, "Delay")
+        self.create_label(self.configuration_box, 90, 330, 61, 20, "TON_DELAY:")
+        self.create_label(self.configuration_box, 90, 360, 61, 20, "TOFF_DELAY:")
+        self.create_label(self.configuration_box, 250, 330, 61, 20, "TON_RISE:")
+        self.create_label(self.configuration_box, 250, 360, 61, 20, "TOFF_FALL:")
+        self.create_label(self.configuration_box, 410, 330, 51, 20, "TON_MAX:")
+        self.create_label(self.configuration_box, 410, 360, 61, 20, "TOFF_MAX:")
+        self.create_label(self.configuration_box, 210, 330, 21, 20, "ms")
+        self.create_label(self.configuration_box, 210, 360, 21, 20, "ms")
+        self.create_label(self.configuration_box, 370, 330, 21, 20, "ms")
+        self.create_label(self.configuration_box, 370, 360, 21, 20, "ms")
+        self.create_label(self.configuration_box, 530, 330, 21, 20, "ms")
+        self.create_label(self.configuration_box, 530, 360, 21, 20, "ms")
+        self.create_label(self.configuration_box, 570, 330, 21, 20, "ON:")
+        self.create_label(self.configuration_box, 570, 360, 31, 20, "OFF:")
+        self.create_label(self.configuration_box, 650, 330, 21, 20, "V")
+        self.create_label(self.configuration_box, 650, 360, 21, 20, "V")
+        self.create_label(self.configuration_box, 250, 290, 51, 20, "Ramping")
+        self.create_label(self.configuration_box, 410, 290, 61, 20, "Max Timing")
+        self.create_label(self.configuration_box, 570, 290, 31, 20, "VOUT")
+
+        # set text fields
         self.ton_delay = QtGui.QLineEdit(self.configuration_box)
         self.ton_delay.setGeometry(QtCore.QRect(160, 330, 41, 21))
         self.ton_delay.setObjectName(_fromUtf8("ton_delay"))
+        self.text_validation(self.ton_delay)  # validate user input
+
         self.toff_delay = QtGui.QLineEdit(self.configuration_box)
         self.toff_delay.setGeometry(QtCore.QRect(160, 360, 41, 21))
         self.toff_delay.setObjectName(_fromUtf8("toff_delay"))
-        self.lineEdit_19 = QtGui.QLineEdit(self.configuration_box)
-        self.lineEdit_19.setGeometry(QtCore.QRect(320, 330, 41, 21))
-        self.lineEdit_19.setObjectName(_fromUtf8("lineEdit_19"))
+        self.text_validation(self.toff_delay)  # validate user input
+
+        self.ton_rise = QtGui.QLineEdit(self.configuration_box)
+        self.ton_rise.setGeometry(QtCore.QRect(320, 330, 41, 21))
+        self.ton_rise.setObjectName(_fromUtf8("ton_rise"))
+        self.text_validation(self.ton_rise)  # validate user input
+
         self.toff_fall = QtGui.QLineEdit(self.configuration_box)
         self.toff_fall.setGeometry(QtCore.QRect(320, 360, 41, 21))
         self.toff_fall.setObjectName(_fromUtf8("toff_fall"))
+        self.text_validation(self.toff_fall)  # validate user input
+
         self.ton_max = QtGui.QLineEdit(self.configuration_box)
         self.ton_max.setGeometry(QtCore.QRect(480, 330, 41, 21))
         self.ton_max.setObjectName(_fromUtf8("ton_max"))
+        self.text_validation(self.ton_max)  # validate user input
+
         self.toff_max = QtGui.QLineEdit(self.configuration_box)
         self.toff_max.setGeometry(QtCore.QRect(480, 360, 41, 21))
         self.toff_max.setObjectName(_fromUtf8("toff_max"))
-        self.label_43 = QtGui.QLabel(self.configuration_box)
-        self.label_43.setGeometry(QtCore.QRect(530, 330, 21, 20))
-        self.label_43.setObjectName(_fromUtf8("label_43"))
-        self.label_44 = QtGui.QLabel(self.configuration_box)
-        self.label_44.setGeometry(QtCore.QRect(530, 360, 21, 20))
-        self.label_44.setObjectName(_fromUtf8("label_44"))
-        self.vout_on_label = QtGui.QLabel(self.configuration_box)
-        self.vout_on_label.setGeometry(QtCore.QRect(570, 330, 21, 20))
-        self.vout_on_label.setObjectName(_fromUtf8("vout_on_label"))
-        self.vout_ff_label = QtGui.QLabel(self.configuration_box)
-        self.vout_ff_label.setGeometry(QtCore.QRect(570, 360, 31, 20))
-        self.vout_ff_label.setObjectName(_fromUtf8("vout_ff_label"))
+        self.text_validation(self.toff_max)  # validate user input
+
         self.vout_on = QtGui.QLineEdit(self.configuration_box)
         self.vout_on.setGeometry(QtCore.QRect(600, 330, 41, 21))
         self.vout_on.setObjectName(_fromUtf8("vout_on"))
-        self.out_off = QtGui.QLineEdit(self.configuration_box)
-        self.out_off.setGeometry(QtCore.QRect(600, 360, 41, 21))
-        self.out_off.setObjectName(_fromUtf8("out_off"))
-        self.label_47 = QtGui.QLabel(self.configuration_box)
-        self.label_47.setGeometry(QtCore.QRect(650, 330, 21, 20))
-        self.label_47.setObjectName(_fromUtf8("label_47"))
-        self.label_48 = QtGui.QLabel(self.configuration_box)
-        self.label_48.setGeometry(QtCore.QRect(650, 360, 21, 20))
-        self.label_48.setObjectName(_fromUtf8("label_48"))
-        self.ramping = QtGui.QLabel(self.configuration_box)
-        self.ramping.setGeometry(QtCore.QRect(250, 290, 51, 20))
-        self.ramping.setObjectName(_fromUtf8("ramping"))
-        self.max_timing = QtGui.QLabel(self.configuration_box)
-        self.max_timing.setGeometry(QtCore.QRect(410, 290, 61, 20))
-        self.max_timing.setObjectName(_fromUtf8("max_timing"))
-        self.vout = QtGui.QLabel(self.configuration_box)
-        self.vout.setGeometry(QtCore.QRect(570, 290, 31, 20))
-        self.vout.setObjectName(_fromUtf8("vout"))
+        self.text_validation(self.vout_on)  # validate user input
+
+        self.vout_off = QtGui.QLineEdit(self.configuration_box)
+        self.vout_off.setGeometry(QtCore.QRect(600, 360, 41, 21))
+        self.vout_off.setObjectName(_fromUtf8("vout_off"))
+        self.text_validation(self.vout_off)  # validate user input
+
         self.graph_frame = QtGui.QFrame(self.configuration_box)
         self.graph_frame.setGeometry(QtCore.QRect(20, 20, 631, 251))
         self.graph_frame.setStyleSheet(_fromUtf8(""))
@@ -270,17 +245,24 @@ class Ui_MainWindow(object):
         self.graph_frame.setObjectName(_fromUtf8("graph_frame"))
         self.stackedWidget.addWidget(self.page_2)
 
-    def page3Pin(self, stackedWidget):
+    def page3_pin(self, stackedWidget):
+
+        # create page 3 (empty yet)
         self.page_3 = QtGui.QWidget()
         self.page_3.setObjectName(_fromUtf8("page_3"))
         self.stackedWidget.addWidget(self.page_3)
 
-    def page4Protection(self, stackedWidget):
+    def page4_protection(self, stackedWidget):
+
+        # create page 4
         self.page_4 = QtGui.QWidget()
         self.page_4.setObjectName(_fromUtf8("page_4"))
+
+        # create protection group box
         self.protection_box = QtGui.QGroupBox(self.page_4)
-        self.protection_box.setGeometry(QtCore.QRect(20, 10, 671, 411))
-        self.protection_box.setObjectName(_fromUtf8("protection_box"))
+        self.size_and_name(self.protection_box, 19, 9, 671, 401, "PMBus Protection Parameters")
+
+        # check boxes
         self.vout_ov_enable = QtGui.QCheckBox(self.protection_box)
         self.vout_ov_enable.setGeometry(QtCore.QRect(90, 90, 16, 17))
         self.vout_ov_enable.setText(_fromUtf8(""))
@@ -297,111 +279,6 @@ class Ui_MainWindow(object):
         self.vin_uv_enable.setGeometry(QtCore.QRect(90, 240, 16, 17))
         self.vin_uv_enable.setText(_fromUtf8(""))
         self.vin_uv_enable.setObjectName(_fromUtf8("vin_uv_enable"))
-        self.vout_ov_label = QtGui.QLabel(self.protection_box)
-        self.vout_ov_label.setGeometry(QtCore.QRect(20, 90, 61, 20))
-        self.vout_ov_label.setObjectName(_fromUtf8("vout_ov_label"))
-        self.vin_ov_label = QtGui.QLabel(self.protection_box)
-        self.vin_ov_label.setGeometry(QtCore.QRect(20, 190, 46, 13))
-        self.vin_ov_label.setObjectName(_fromUtf8("vin_ov_label"))
-        self.warning_label = QtGui.QLabel(self.protection_box)
-        self.warning_label.setGeometry(QtCore.QRect(170, 30, 71, 16))
-        self.warning_label.setObjectName(_fromUtf8("warning_label"))
-        self.iout_oc_label = QtGui.QLabel(self.protection_box)
-        self.iout_oc_label.setGeometry(QtCore.QRect(20, 290, 46, 13))
-        self.iout_oc_label.setObjectName(_fromUtf8("iout_oc_label"))
-        self.enable_label = QtGui.QLabel(self.protection_box)
-        self.enable_label.setGeometry(QtCore.QRect(80, 30, 41, 16))
-        self.enable_label.setObjectName(_fromUtf8("enable_label"))
-        self.temp_ot_label = QtGui.QLabel(self.protection_box)
-        self.temp_ot_label.setGeometry(QtCore.QRect(20, 340, 46, 13))
-        self.temp_ot_label.setObjectName(_fromUtf8("temp_ot_label"))
-        self.fault_label = QtGui.QLabel(self.protection_box)
-        self.fault_label.setGeometry(QtCore.QRect(310, 30, 51, 16))
-        self.fault_label.setObjectName(_fromUtf8("fault_label"))
-        self.delay_label = QtGui.QLabel(self.protection_box)
-        self.delay_label.setGeometry(QtCore.QRect(450, 30, 61, 16))
-        self.delay_label.setObjectName(_fromUtf8("delay_label"))
-        self.vout_ov_warning = QtGui.QLineEdit(self.protection_box)
-        self.vout_ov_warning.setGeometry(QtCore.QRect(160, 90, 81, 21))
-        self.vout_ov_warning.setObjectName(_fromUtf8("vout_ov_warning"))
-        self.vout_uv_warning = QtGui.QLineEdit(self.protection_box)
-        self.vout_uv_warning.setGeometry(QtCore.QRect(160, 140, 81, 21))
-        self.vout_uv_warning.setObjectName(_fromUtf8("vout_uv_warning"))
-        self.vin_ov_warning = QtGui.QLineEdit(self.protection_box)
-        self.vin_ov_warning.setGeometry(QtCore.QRect(160, 190, 81, 21))
-        self.vin_ov_warning.setObjectName(_fromUtf8("vin_ov_warning"))
-        self.vin_uv_warning = QtGui.QLineEdit(self.protection_box)
-        self.vin_uv_warning.setGeometry(QtCore.QRect(160, 240, 81, 21))
-        self.vin_uv_warning.setObjectName(_fromUtf8("vin_uv_warning"))
-        self.vout_ov_fault = QtGui.QLineEdit(self.protection_box)
-        self.vout_ov_fault.setGeometry(QtCore.QRect(300, 90, 81, 21))
-        self.vout_ov_fault.setObjectName(_fromUtf8("vout_ov_fault"))
-        self.vout_uv_fault = QtGui.QLineEdit(self.protection_box)
-        self.vout_uv_fault.setGeometry(QtCore.QRect(300, 140, 81, 21))
-        self.vout_uv_fault.setObjectName(_fromUtf8("vout_uv_fault"))
-        self.vin_ov_fault = QtGui.QLineEdit(self.protection_box)
-        self.vin_ov_fault.setGeometry(QtCore.QRect(300, 190, 81, 21))
-        self.vin_ov_fault.setObjectName(_fromUtf8("vin_ov_fault"))
-        self.vin_uv_fault = QtGui.QLineEdit(self.protection_box)
-        self.vin_uv_fault.setGeometry(QtCore.QRect(300, 240, 81, 21))
-        self.vin_uv_fault.setObjectName(_fromUtf8("vin_uv_fault"))
-        self.vout_ov_delay = QtGui.QLineEdit(self.protection_box)
-        self.vout_ov_delay.setGeometry(QtCore.QRect(440, 90, 81, 21))
-        self.vout_ov_delay.setObjectName(_fromUtf8("vout_ov_delay"))
-        self.vout_uv_delay = QtGui.QLineEdit(self.protection_box)
-        self.vout_uv_delay.setGeometry(QtCore.QRect(440, 140, 81, 21))
-        self.vout_uv_delay.setObjectName(_fromUtf8("vout_uv_delay"))
-        self.vin_ov_delay = QtGui.QLineEdit(self.protection_box)
-        self.vin_ov_delay.setGeometry(QtCore.QRect(440, 190, 81, 21))
-        self.vin_ov_delay.setObjectName(_fromUtf8("vin_ov_delay"))
-        self.iout_oc_delay = QtGui.QLineEdit(self.protection_box)
-        self.iout_oc_delay.setGeometry(QtCore.QRect(440, 290, 81, 21))
-        self.iout_oc_delay.setObjectName(_fromUtf8("iout_oc_delay"))
-        self.v_label1 = QtGui.QLabel(self.protection_box)
-        self.v_label1.setGeometry(QtCore.QRect(250, 90, 21, 20))
-        self.v_label1.setObjectName(_fromUtf8("v_label1"))
-        self.v_label2 = QtGui.QLabel(self.protection_box)
-        self.v_label2.setGeometry(QtCore.QRect(250, 140, 21, 20))
-        self.v_label2.setObjectName(_fromUtf8("v_label2"))
-        self.v_label3 = QtGui.QLabel(self.protection_box)
-        self.v_label3.setGeometry(QtCore.QRect(250, 190, 21, 20))
-        self.v_label3.setObjectName(_fromUtf8("v_label3"))
-        self.v_label4 = QtGui.QLabel(self.protection_box)
-        self.v_label4.setGeometry(QtCore.QRect(250, 240, 21, 20))
-        self.v_label4.setObjectName(_fromUtf8("v_label4"))
-        self.v_label5 = QtGui.QLabel(self.protection_box)
-        self.v_label5.setGeometry(QtCore.QRect(390, 90, 21, 20))
-        self.v_label5.setObjectName(_fromUtf8("v_label5"))
-        self.v_label6 = QtGui.QLabel(self.protection_box)
-        self.v_label6.setGeometry(QtCore.QRect(390, 140, 21, 20))
-        self.v_label6.setObjectName(_fromUtf8("v_label6"))
-        self.v_label7 = QtGui.QLabel(self.protection_box)
-        self.v_label7.setGeometry(QtCore.QRect(390, 190, 21, 20))
-        self.v_label7.setObjectName(_fromUtf8("v_label7"))
-        self.v_label8 = QtGui.QLabel(self.protection_box)
-        self.v_label8.setGeometry(QtCore.QRect(390, 240, 21, 20))
-        self.v_label8.setObjectName(_fromUtf8("v_label8"))
-        self.ms_label1 = QtGui.QLabel(self.protection_box)
-        self.ms_label1.setGeometry(QtCore.QRect(530, 90, 21, 20))
-        self.ms_label1.setObjectName(_fromUtf8("ms_label1"))
-        self.ms_label2 = QtGui.QLabel(self.protection_box)
-        self.ms_label2.setGeometry(QtCore.QRect(530, 140, 21, 20))
-        self.ms_label2.setObjectName(_fromUtf8("ms_label2"))
-        self.ms_label3 = QtGui.QLabel(self.protection_box)
-        self.ms_label3.setGeometry(QtCore.QRect(530, 190, 21, 20))
-        self.ms_label3.setObjectName(_fromUtf8("ms_label3"))
-        self.ms_label4 = QtGui.QLabel(self.protection_box)
-        self.ms_label4.setGeometry(QtCore.QRect(530, 240, 21, 20))
-        self.ms_label4.setObjectName(_fromUtf8("ms_label4"))
-        self.alert_label = QtGui.QLabel(self.protection_box)
-        self.alert_label.setGeometry(QtCore.QRect(590, 30, 31, 16))
-        self.alert_label.setObjectName(_fromUtf8("alert_label"))
-        self.vout_uv_label = QtGui.QLabel(self.protection_box)
-        self.vout_uv_label.setGeometry(QtCore.QRect(20, 140, 51, 16))
-        self.vout_uv_label.setObjectName(_fromUtf8("vout_uv_label"))
-        self.vin_uv_label = QtGui.QLabel(self.protection_box)
-        self.vin_uv_label.setGeometry(QtCore.QRect(20, 240, 46, 13))
-        self.vin_uv_label.setObjectName(_fromUtf8("vin_uv_label"))
         self.temp_ot_enable = QtGui.QCheckBox(self.protection_box)
         self.temp_ot_enable.setGeometry(QtCore.QRect(90, 340, 16, 17))
         self.temp_ot_enable.setText(_fromUtf8(""))
@@ -410,48 +287,6 @@ class Ui_MainWindow(object):
         self.iout_oc_enable.setGeometry(QtCore.QRect(90, 290, 16, 17))
         self.iout_oc_enable.setText(_fromUtf8(""))
         self.iout_oc_enable.setObjectName(_fromUtf8("iout_oc_enable"))
-        self.iout_oc_warning = QtGui.QLineEdit(self.protection_box)
-        self.iout_oc_warning.setGeometry(QtCore.QRect(160, 290, 81, 21))
-        self.iout_oc_warning.setObjectName(_fromUtf8("iout_oc_warning"))
-        self.temp_ot_warning = QtGui.QLineEdit(self.protection_box)
-        self.temp_ot_warning.setGeometry(QtCore.QRect(160, 340, 81, 21))
-        self.temp_ot_warning.setObjectName(_fromUtf8("temp_ot_warning"))
-        self.temp_ot_fault = QtGui.QLineEdit(self.protection_box)
-        self.temp_ot_fault.setGeometry(QtCore.QRect(300, 340, 81, 21))
-        self.temp_ot_fault.setObjectName(_fromUtf8("temp_ot_fault"))
-        self.iout_oc_fault = QtGui.QLineEdit(self.protection_box)
-        self.iout_oc_fault.setGeometry(QtCore.QRect(300, 290, 81, 21))
-        self.iout_oc_fault.setObjectName(_fromUtf8("iout_oc_fault"))
-        self.vin_uv_delay = QtGui.QLineEdit(self.protection_box)
-        self.vin_uv_delay.setGeometry(QtCore.QRect(440, 240, 81, 21))
-        self.vin_uv_delay.setObjectName(_fromUtf8("vin_uv_delay"))
-        self.temp_ot_delay = QtGui.QLineEdit(self.protection_box)
-        self.temp_ot_delay.setGeometry(QtCore.QRect(440, 340, 81, 21))
-        self.temp_ot_delay.setObjectName(_fromUtf8("temp_ot_delay"))
-        self.c_label1 = QtGui.QLabel(self.protection_box)
-        self.c_label1.setGeometry(QtCore.QRect(250, 340, 21, 20))
-        self.c_label1.setObjectName(_fromUtf8("c_label1"))
-        self.a_label1 = QtGui.QLabel(self.protection_box)
-        self.a_label1.setGeometry(QtCore.QRect(250, 290, 21, 20))
-        self.a_label1.setObjectName(_fromUtf8("a_label1"))
-        self.ms_label5 = QtGui.QLabel(self.protection_box)
-        self.ms_label5.setGeometry(QtCore.QRect(530, 290, 21, 20))
-        self.ms_label5.setObjectName(_fromUtf8("ms_label5"))
-        self.ms_label6 = QtGui.QLabel(self.protection_box)
-        self.ms_label6.setGeometry(QtCore.QRect(530, 340, 21, 20))
-        self.ms_label6.setObjectName(_fromUtf8("ms_label6"))
-        self.c_label2 = QtGui.QLabel(self.protection_box)
-        self.c_label2.setGeometry(QtCore.QRect(390, 340, 21, 20))
-        self.c_label2.setObjectName(_fromUtf8("c_label2"))
-        self.a_label2 = QtGui.QLabel(self.protection_box)
-        self.a_label2.setGeometry(QtCore.QRect(390, 290, 21, 20))
-        self.a_label2.setObjectName(_fromUtf8("a_label2"))
-        self.w_label = QtGui.QLabel(self.protection_box)
-        self.w_label.setGeometry(QtCore.QRect(580, 60, 21, 20))
-        self.w_label.setObjectName(_fromUtf8("w_label"))
-        self.f_label = QtGui.QLabel(self.protection_box)
-        self.f_label.setGeometry(QtCore.QRect(620, 60, 21, 20))
-        self.f_label.setObjectName(_fromUtf8("f_label"))
         self.vout_ov_walert = QtGui.QCheckBox(self.protection_box)
         self.vout_ov_walert.setGeometry(QtCore.QRect(580, 90, 16, 17))
         self.vout_ov_walert.setText(_fromUtf8(""))
@@ -500,60 +335,201 @@ class Ui_MainWindow(object):
         self.temp_oc_falert.setGeometry(QtCore.QRect(620, 340, 16, 17))
         self.temp_oc_falert.setText(_fromUtf8(""))
         self.temp_oc_falert.setObjectName(_fromUtf8("temp_oc_falert"))
+
+        # define labels
+        self.create_label(self.protection_box, 20, 90, 61, 20, "VOUT OV")
+        self.create_label(self.protection_box, 20, 190, 46, 13, "VIN OV")
+        self.create_label(self.protection_box, 170, 30, 71, 16, "Warning Limit")
+        self.create_label(self.protection_box, 20, 290, 46, 13, "IOUT")
+        self.create_label(self.protection_box, 80, 30, 41, 16, "Enable")
+        self.create_label(self.protection_box, 20, 340, 46, 13, "TEMP")
+        self.create_label(self.protection_box, 310, 30, 51, 16, "Fault Limit")
+        self.create_label(self.protection_box, 450, 30, 61, 16, "Time Delay")
+        self.create_label(self.protection_box, 250, 90, 21, 20, "V")
+        self.create_label(self.protection_box, 250, 90, 21, 20, "V")
+        self.create_label(self.protection_box, 250, 140, 21, 20, "V")
+        self.create_label(self.protection_box, 250, 190, 21, 20, "V")
+        self.create_label(self.protection_box, 250, 240, 21, 20, "V")
+        self.create_label(self.protection_box, 390, 90, 21, 20, "V")
+        self.create_label(self.protection_box, 390, 140, 21, 20, "V")
+        self.create_label(self.protection_box, 390, 190, 21, 20, "V")
+        self.create_label(self.protection_box, 390, 240, 21, 20, "V")
+        self.create_label(self.protection_box, 530, 90, 21, 20, "ms")
+        self.create_label(self.protection_box, 530, 140, 21, 20, "ms")
+        self.create_label(self.protection_box, 530, 190, 21, 20, "ms")
+        self.create_label(self.protection_box, 530, 240, 21, 20, "ms")
+        self.create_label(self.protection_box, 590, 30, 31, 16, "Alert")
+        self.create_label(self.protection_box, 20, 140, 51, 16, "VOUT UV")
+        self.create_label(self.protection_box, 20, 240, 46, 13, "VIN UV")
+        self.create_label(self.protection_box, 250, 340, 21, 20, "°C")
+        self.create_label(self.protection_box, 250, 290, 21, 20, "A")
+        self.create_label(self.protection_box, 530, 290, 21, 20, "ms")
+        self.create_label(self.protection_box, 530, 340, 21, 20, "ms")
+        self.create_label(self.protection_box, 390, 340, 21, 20, "°C")
+        self.create_label(self.protection_box, 390, 290, 21, 20, "A")
+        self.create_label(self.protection_box, 580, 60, 21, 20, "W")
+        self.create_label(self.protection_box, 620, 60, 21, 20, "F")
+
+        # text fields
+        self.vout_ov_warning = QtGui.QLineEdit(self.protection_box)
+        self.vout_ov_warning.setGeometry(QtCore.QRect(160, 90, 81, 21))
+        self.vout_ov_warning.setObjectName(_fromUtf8("vout_ov_warning"))
+        self.text_validation(self.vout_ov_warning)  # validate user input
+
+        self.vout_uv_warning = QtGui.QLineEdit(self.protection_box)
+        self.vout_uv_warning.setGeometry(QtCore.QRect(160, 140, 81, 21))
+        self.vout_uv_warning.setObjectName(_fromUtf8("vout_uv_warning"))
+        self.text_validation(self.vout_uv_warning)  # validate user input
+
+        self.vin_ov_warning = QtGui.QLineEdit(self.protection_box)
+        self.vin_ov_warning.setGeometry(QtCore.QRect(160, 190, 81, 21))
+        self.vin_ov_warning.setObjectName(_fromUtf8("vin_ov_warning"))
+        self.text_validation(self.vin_ov_warning)  # validate user input
+
+        self.vin_uv_warning = QtGui.QLineEdit(self.protection_box)
+        self.vin_uv_warning.setGeometry(QtCore.QRect(160, 240, 81, 21))
+        self.vin_uv_warning.setObjectName(_fromUtf8("vin_uv_warning"))
+        self.text_validation(self.vin_uv_warning)  # validate user input
+
+        self.vout_ov_fault = QtGui.QLineEdit(self.protection_box)
+        self.vout_ov_fault.setGeometry(QtCore.QRect(300, 90, 81, 21))
+        self.vout_ov_fault.setObjectName(_fromUtf8("vout_ov_fault"))
+        self.text_validation(self.vout_ov_fault)  # validate user input
+
+        self.vout_uv_fault = QtGui.QLineEdit(self.protection_box)
+        self.vout_uv_fault.setGeometry(QtCore.QRect(300, 140, 81, 21))
+        self.vout_uv_fault.setObjectName(_fromUtf8("vout_uv_fault"))
+        self.text_validation(self.vout_uv_fault)  # validate user input
+
+        self.vin_ov_fault = QtGui.QLineEdit(self.protection_box)
+        self.vin_ov_fault.setGeometry(QtCore.QRect(300, 190, 81, 21))
+        self.vin_ov_fault.setObjectName(_fromUtf8("vin_ov_fault"))
+        self.text_validation(self.vin_ov_fault)  # validate user input
+
+        self.vin_uv_fault = QtGui.QLineEdit(self.protection_box)
+        self.vin_uv_fault.setGeometry(QtCore.QRect(300, 240, 81, 21))
+        self.vin_uv_fault.setObjectName(_fromUtf8("vin_uv_fault"))
+        self.text_validation(self.vin_uv_fault)  # validate user input
+
+        self.vout_ov_delay = QtGui.QLineEdit(self.protection_box)
+        self.vout_ov_delay.setGeometry(QtCore.QRect(440, 90, 81, 21))
+        self.vout_ov_delay.setObjectName(_fromUtf8("vout_ov_delay"))
+        self.text_validation(self.vout_ov_delay)  # validate user input
+
+        self.vout_uv_delay = QtGui.QLineEdit(self.protection_box)
+        self.vout_uv_delay.setGeometry(QtCore.QRect(440, 140, 81, 21))
+        self.vout_uv_delay.setObjectName(_fromUtf8("vout_uv_delay"))
+        self.text_validation(self.vout_uv_delay)  # validate user input
+
+        self.vin_ov_delay = QtGui.QLineEdit(self.protection_box)
+        self.vin_ov_delay.setGeometry(QtCore.QRect(440, 190, 81, 21))
+        self.vin_ov_delay.setObjectName(_fromUtf8("vin_ov_delay"))
+        self.text_validation(self.vin_ov_delay)  # validate user input
+
+        self.iout_oc_delay = QtGui.QLineEdit(self.protection_box)
+        self.iout_oc_delay.setGeometry(QtCore.QRect(440, 290, 81, 21))
+        self.iout_oc_delay.setObjectName(_fromUtf8("iout_oc_delay"))
+        self.text_validation(self.iout_oc_delay)  # validate user input
+
+        self.iout_oc_warning = QtGui.QLineEdit(self.protection_box)
+        self.iout_oc_warning.setGeometry(QtCore.QRect(160, 290, 81, 21))
+        self.iout_oc_warning.setObjectName(_fromUtf8("iout_oc_warning"))
+        self.text_validation(self.iout_oc_warning)  # validate user input
+
+        self.temp_ot_warning = QtGui.QLineEdit(self.protection_box)
+        self.temp_ot_warning.setGeometry(QtCore.QRect(160, 340, 81, 21))
+        self.temp_ot_warning.setObjectName(_fromUtf8("temp_ot_warning"))
+        self.text_validation(self.temp_ot_warning)  # validate user input
+
+        self.temp_ot_fault = QtGui.QLineEdit(self.protection_box)
+        self.temp_ot_fault.setGeometry(QtCore.QRect(300, 340, 81, 21))
+        self.temp_ot_fault.setObjectName(_fromUtf8("temp_ot_fault"))
+        self.text_validation(self.temp_ot_fault)  # validate user input
+
+        self.iout_oc_fault = QtGui.QLineEdit(self.protection_box)
+        self.iout_oc_fault.setGeometry(QtCore.QRect(300, 290, 81, 21))
+        self.iout_oc_fault.setObjectName(_fromUtf8("iout_oc_fault"))
+        self.text_validation(self.iout_oc_fault)  # validate user input
+
+        self.vin_uv_delay = QtGui.QLineEdit(self.protection_box)
+        self.vin_uv_delay.setGeometry(QtCore.QRect(440, 240, 81, 21))
+        self.vin_uv_delay.setObjectName(_fromUtf8("vin_uv_delay"))
+        self.text_validation(self.vin_uv_delay)  # validate user input
+
+        self.temp_ot_delay = QtGui.QLineEdit(self.protection_box)
+        self.temp_ot_delay.setGeometry(QtCore.QRect(440, 340, 81, 21))
+        self.temp_ot_delay.setObjectName(_fromUtf8("temp_ot_delay"))
+        self.text_validation(self.temp_ot_delay)  # validate user input
+
         self.stackedWidget.addWidget(self.page_4)
 
-    def page5Monitor(self, stackedWidget):
+    def page5_monitor(self, stackedWidget):
+
+        # create page 5
         self.page_5 = QtGui.QWidget()
         self.page_5.setObjectName(_fromUtf8("page_5"))
+
+        # create monitoring box
         self.monitoring_box = QtGui.QGroupBox(self.page_5)
-        self.monitoring_box.setGeometry(QtCore.QRect(20, 10, 671, 401))
-        self.monitoring_box.setObjectName(_fromUtf8("monitoring_box"))
+        self.size_and_name(self.monitoring_box, 19, 9, 671, 401, "PMBus Status Information")
+
+        # clear faults button
         self.clear_faults_but = QtGui.QPushButton(self.monitoring_box)
-        self.clear_faults_but.setGeometry(QtCore.QRect(20, 260, 75, 23))
-        self.clear_faults_but.setObjectName(_fromUtf8("clear_faults_but"))
-        self.vin_label = QtGui.QLabel(self.monitoring_box)
-        self.vin_label.setGeometry(QtCore.QRect(30, 50, 31, 21))
-        self.vin_label.setObjectName(_fromUtf8("vin_label"))
-        self.vout_label = QtGui.QLabel(self.monitoring_box)
-        self.vout_label.setGeometry(QtCore.QRect(30, 100, 41, 20))
-        self.vout_label.setObjectName(_fromUtf8("vout_label"))
-        self.iout_label = QtGui.QLabel(self.monitoring_box)
-        self.iout_label.setGeometry(QtCore.QRect(30, 150, 31, 20))
-        self.iout_label.setObjectName(_fromUtf8("iout_label"))
-        self.temp_label = QtGui.QLabel(self.monitoring_box)
-        self.temp_label.setGeometry(QtCore.QRect(30, 200, 41, 20))
-        self.temp_label.setObjectName(_fromUtf8("temp_label"))
-        self.vin_value = QtGui.QLabel(self.monitoring_box)
-        self.vin_value.setGeometry(QtCore.QRect(90, 50, 46, 21))
-        self.vin_value.setObjectName(_fromUtf8("vin_value"))
-        self.vout_value = QtGui.QLabel(self.monitoring_box)
-        self.vout_value.setGeometry(QtCore.QRect(90, 100, 46, 21))
-        self.vout_value.setObjectName(_fromUtf8("vout_value"))
-        self.iout_value = QtGui.QLabel(self.monitoring_box)
-        self.iout_value.setGeometry(QtCore.QRect(90, 150, 46, 21))
-        self.iout_value.setObjectName(_fromUtf8("iout_value"))
-        self.temp_value = QtGui.QLabel(self.monitoring_box)
-        self.temp_value.setGeometry(QtCore.QRect(90, 200, 46, 21))
-        self.temp_value.setObjectName(_fromUtf8("temp_value"))
+        self.clear_faults_but.setGeometry(QtCore.QRect(10, 240, 71, 23))
+        self.clear_faults_but.setText(_translate("MainWindow", "Clear Faults", None))
+
+        # define labels
+        self.create_label(self.monitoring_box, 10, 40, 31, 21, "VIN:")
+        self.create_label(self.monitoring_box, 10, 90, 41, 20, "VOUT:")
+        self.create_label(self.monitoring_box, 10, 140, 31, 20, "IOUT:")
+        self.create_label(self.monitoring_box, 10, 190, 41, 20, "TEMP:")
+        self.create_label(self.monitoring_box, 60, 40, 46, 21, "0 V")
+        self.create_label(self.monitoring_box, 60, 90, 46, 21, "0 V")
+        self.create_label(self.monitoring_box, 60, 140, 46, 21, "0 A")
+        self.create_label(self.monitoring_box, 60, 190, 46, 21, "0 °C")
+
+        # create frames for monitoring graphs
+        self.input_voltage_graph = QtGui.QFrame(self.monitoring_box)
+        self.input_voltage_graph.setGeometry(QtCore.QRect(90, 20, 281, 181))
+        self.input_voltage_graph.setFrameShape(QtGui.QFrame.StyledPanel)
+        self.input_voltage_graph.setFrameShadow(QtGui.QFrame.Raised)
+        self.input_voltage_graph.setObjectName(_fromUtf8("input_voltage_graph"))
+        self.output_current_graph = QtGui.QFrame(self.monitoring_box)
+        self.output_current_graph.setGeometry(QtCore.QRect(90, 210, 281, 181))
+        self.output_current_graph.setFrameShape(QtGui.QFrame.StyledPanel)
+        self.output_current_graph.setFrameShadow(QtGui.QFrame.Raised)
+        self.output_current_graph.setObjectName(_fromUtf8("output_current_graph"))
+        self.temp_graph = QtGui.QFrame(self.monitoring_box)
+        self.temp_graph.setGeometry(QtCore.QRect(380, 210, 281, 181))
+        self.temp_graph.setFrameShape(QtGui.QFrame.StyledPanel)
+        self.temp_graph.setFrameShadow(QtGui.QFrame.Raised)
+        self.temp_graph.setObjectName(_fromUtf8("temp_graph"))
+        self.output_voltage_graph = QtGui.QFrame(self.monitoring_box)
+        self.output_voltage_graph.setGeometry(QtCore.QRect(380, 20, 281, 181))
+        self.output_voltage_graph.setFrameShape(QtGui.QFrame.StyledPanel)
+        self.output_voltage_graph.setFrameShadow(QtGui.QFrame.Raised)
+        self.output_voltage_graph.setObjectName(_fromUtf8("output_voltage_graph"))
         self.stackedWidget.addWidget(self.page_5)
 
-    def infoPanel(self, centralWidget):
+    def info_panel(self, centralWidget):
         self.info_frame = QtGui.QFrame(self.centralwidget)
         self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 511))
         self.info_frame.setStyleSheet(_fromUtf8(""))
         self.info_frame.setFrameShape(QtGui.QFrame.StyledPanel)
         self.info_frame.setFrameShadow(QtGui.QFrame.Raised)
         self.info_frame.setObjectName(_fromUtf8("info_frame"))
-        self.label_52 = QtGui.QLabel(self.info_frame)
-        self.label_52.setGeometry(QtCore.QRect(20, 30, 61, 20))
-        self.label_52.setObjectName(_fromUtf8("label_52"))
+
+        self.create_label(self.info_frame, 20, 30, 61, 20, "Device Info:")
+
         self.textBrowser = QtGui.QTextBrowser(self.info_frame)
         self.textBrowser.setGeometry(QtCore.QRect(20, 70, 121, 192))
         self.textBrowser.setObjectName(_fromUtf8("textBrowser"))
 
     def setupUi(self, MainWindow):
+
         # set style of the main window
         self.setstyle(MainWindow)
+        MainWindow.setWindowTitle(_translate("MainWindow", "PMBus Power GUI", None))
 
         # create central widget
         self.centralwidget = QtGui.QWidget(MainWindow)
@@ -570,22 +546,22 @@ class Ui_MainWindow(object):
         self.stackedWidget.setObjectName(_fromUtf8("stackedWidget"))
 
         # create page1
-        self.page1Main(self.stackedWidget)
+        self.page1_main(self.stackedWidget)
 
         # create page2
-        self.page2Configuration(self.stackedWidget)
+        self.page2_configuration(self.stackedWidget)
 
         # create page3
-        self.page3Pin(self.stackedWidget)
+        self.page3_pin(self.stackedWidget)
 
         # create page4
-        self.page4Protection(self.stackedWidget)
+        self.page4_protection(self.stackedWidget)
 
         # create page5
-        self.page5Monitor(self.stackedWidget)
+        self.page5_monitor(self.stackedWidget)
 
         # device info - left panel
-        self.infoPanel(self.centralwidget)
+        self.info_panel(self.centralwidget)
 
         # menu bar & status bar
         MainWindow.setCentralWidget(self.centralwidget)
@@ -597,93 +573,9 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName(_fromUtf8("statusbar"))
         MainWindow.setStatusBar(self.statusbar)
 
-        self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 
-    def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
-        self.main_but.setText(_translate("MainWindow", "Main", None))
-        self.config_but.setText(_translate("MainWindow", "Configuration", None))
-        self.pin_but.setText(_translate("MainWindow", "Pin", None))
-        self.protec_but.setText(_translate("MainWindow", "Protection", None))
-        self.monitor_but.setText(_translate("MainWindow", "Monitoring", None))
-        self.voltage_box.setTitle(_translate("MainWindow", "Voltage", None))
-        self.vin_label_main.setText(_translate("MainWindow", "VIN", None))
-        self.vout_label_main.setText(_translate("MainWindow", "VOUT", None))
-        self.label_3.setText(_translate("MainWindow", "V", None))
-        self.label_4.setText(_translate("MainWindow", "V", None))
-        self.procent_label1.setText(_translate("MainWindow", "%", None))
-        self.procent_label2.setText(_translate("MainWindow", "%", None))
-        self.nominal_label.setText(_translate("MainWindow", "Nominal", None))
-        self.margin_high_label.setText(_translate("MainWindow", "Margin High", None))
-        self.margin_low_label.setText(_translate("MainWindow", "Margin Low", None))
-        self.configuration_box.setTitle(_translate("MainWindow", "Sequencing", None))
-        self.dev_rise.setText(_translate("MainWindow", "Device Rise:", None))
-        self.dev_fall.setText(_translate("MainWindow", "Device Fall:", None))
-        self.delay.setText(_translate("MainWindow", "Delay", None))
-        self.ton_delay_label.setText(_translate("MainWindow", "TON_DELAY:", None))
-        self.toff_delay_label.setText(_translate("MainWindow", "TOFF_DELAY:", None))
-        self.ton_rise_label.setText(_translate("MainWindow", "TON_RISE:", None))
-        self.toff_fall_label.setText(_translate("MainWindow", "TOFF_FALL:", None))
-        self.ton_max_label.setText(_translate("MainWindow", "TON_MAX:", None))
-        self.toff_max_label.setText(_translate("MainWindow", "TOFF_MAX:", None))
-        self.label_39.setText(_translate("MainWindow", "ms", None))
-        self.label_40.setText(_translate("MainWindow", "ms", None))
-        self.label_41.setText(_translate("MainWindow", "ms", None))
-        self.label_42.setText(_translate("MainWindow", "ms", None))
-        self.label_43.setText(_translate("MainWindow", "ms", None))
-        self.label_44.setText(_translate("MainWindow", "ms", None))
-        self.vout_on_label.setText(_translate("MainWindow", "ON:", None))
-        self.vout_ff_label.setText(_translate("MainWindow", "OFF:", None))
-        self.label_47.setText(_translate("MainWindow", "V", None))
-        self.label_48.setText(_translate("MainWindow", "V", None))
-        self.ramping.setText(_translate("MainWindow", "Ramping", None))
-        self.max_timing.setText(_translate("MainWindow", "Max Timing", None))
-        self.vout.setText(_translate("MainWindow", "VOUT", None))
-        self.protection_box.setTitle(_translate("MainWindow", "PMBus Protection Parameters", None))
-        self.vout_ov_label.setText(_translate("MainWindow", "VOUT OV", None))
-        self.vin_ov_label.setText(_translate("MainWindow", "VIN OV", None))
-        self.warning_label.setText(_translate("MainWindow", "Warning Limit", None))
-        self.iout_oc_label.setText(_translate("MainWindow", "IOUT", None))
-        self.enable_label.setText(_translate("MainWindow", "Enable", None))
-        self.temp_ot_label.setText(_translate("MainWindow", "TEMP", None))
-        self.fault_label.setText(_translate("MainWindow", "Fault Limit", None))
-        self.delay_label.setText(_translate("MainWindow", "Time Delay", None))
-        self.v_label1.setText(_translate("MainWindow", "V", None))
-        self.v_label2.setText(_translate("MainWindow", "V", None))
-        self.v_label3.setText(_translate("MainWindow", "V", None))
-        self.v_label4.setText(_translate("MainWindow", "V", None))
-        self.v_label5.setText(_translate("MainWindow", "V", None))
-        self.v_label6.setText(_translate("MainWindow", "V", None))
-        self.v_label7.setText(_translate("MainWindow", "V", None))
-        self.v_label8.setText(_translate("MainWindow", "V", None))
-        self.ms_label1.setText(_translate("MainWindow", "ms", None))
-        self.ms_label2.setText(_translate("MainWindow", "ms", None))
-        self.ms_label3.setText(_translate("MainWindow", "ms", None))
-        self.ms_label4.setText(_translate("MainWindow", "ms", None))
-        self.alert_label.setText(_translate("MainWindow", "Alert", None))
-        self.vout_uv_label.setText(_translate("MainWindow", "VOUT UV", None))
-        self.vin_uv_label.setText(_translate("MainWindow", "VIN UV", None))
-        self.c_label1.setText(_translate("MainWindow", "°C", None))
-        self.a_label1.setText(_translate("MainWindow", "A", None))
-        self.ms_label5.setText(_translate("MainWindow", "ms", None))
-        self.ms_label6.setText(_translate("MainWindow", "ms", None))
-        self.c_label2.setText(_translate("MainWindow", "°C", None))
-        self.a_label2.setText(_translate("MainWindow", "A", None))
-        self.w_label.setText(_translate("MainWindow", "W", None))
-        self.f_label.setText(_translate("MainWindow", "F", None))
-        self.monitoring_box.setTitle(_translate("MainWindow", "PMBus Status Information", None))
-        self.clear_faults_but.setText(_translate("MainWindow", "Clear Faults", None))
-        self.vin_label.setText(_translate("MainWindow", "VIN:", None))
-        self.vout_label.setText(_translate("MainWindow", "VOUT:", None))
-        self.iout_label.setText(_translate("MainWindow", "IOUT:", None))
-        self.temp_label.setText(_translate("MainWindow", "TEMP:", None))
-        self.vin_value.setText(_translate("MainWindow", "0 V", None))
-        self.vout_value.setText(_translate("MainWindow", "0 V", None))
-        self.iout_value.setText(_translate("MainWindow", "0 A", None))
-        self.temp_value.setText(_translate("MainWindow", "0 °C", None))
-        self.label_52.setText(_translate("MainWindow", "Device info:", None))
 
     def page1(self):
         self.stackedWidget.setCurrentIndex(0)
@@ -709,4 +601,5 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+
 

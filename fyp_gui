@@ -3,82 +3,112 @@
 # import the PyUSB module
 import ftd2xx
 import time
+import sys
+import linear_conversions
+class PMBUS_COMMS:
 
-def process():
+    def set_up_device(self, device):
 
-    # list devices by description, returns tuple of attached devices description strings
-    d = ftd2xx.listDevices()
-    print d
+        # set baud rate
+        device.setBaudRate(1 * 1000 * 1000)
+        # set data characteristics
+        device.setDataCharacteristics(ftd2xx.ftd2xx.BITS_8, ftd2xx.ftd2xx.STOP_BITS_1, ftd2xx.ftd2xx.PARITY_NONE)
+        # purge
+        device.purge()
+        # set RX/TX timeouts
+        device.setTimeouts(300, 300)
+        # set bit mode
+        device.setBitMode(0xFF, 0x40)
+        # set flow control
+        device.setFlowControl(ftd2xx.ftd2xx.FLOW_NONE, 0, 0)
+        # set chars
+        device.setChars(0x0A, 0x7F, 0, 0)
+        # set event notification
+        # device.setEventNotification(ftd2xx.ftd2xx.EVENT_RXCHAR)
 
-    d = ftd2xx.getLibraryVersion()
-    #print d
+    def configuration_command(self, device, command):
 
-    try:
-        device = ftd2xx.open(0)
-        #print device
-    except ftd2xx.ftd2xx.DeviceError:
-        print "Unable to open 'EM2130 device'."
-        exit(1)
+        device.write(command + "\r\n")
+        time.sleep(0.005)  # allow 5ms delay between the commands
+        device.read(device.getQueueStatus())
 
-    # read eeprom
-    #print device.eeRead()
+    def process(self):
 
-    # get queue status
-    #print device.getQueueStatus()
+        # list devices by description, returns tuple of attached devices description strings
+        d = ftd2xx.listDevices()
+        print d
 
-    # set baud rate
-    device.setBaudRate(1000000)
-    # set data characteristics
-    device.setDataCharacteristics(ftd2xx.ftd2xx.BITS_8, ftd2xx.ftd2xx.STOP_BITS_1, ftd2xx.ftd2xx.PARITY_NONE)
-    # purge
-    device.purge()
-    # set RX/TX timeouts
-    device.setTimeouts(300, 300)
-    # set bit mode
-    device.setBitMode(0xFF, 0x40)
-    # set flow control
-    device.setFlowControl(ftd2xx.ftd2xx.FLOW_NONE, 0, 0)
-    # set chars
-    device.setChars(0x0A, 0x7F, 0, 0)
-    # set event notification
-    #device.setEventNotification(ftd2xx.ftd2xx.EVENT_RXCHAR, )
+        try:
+            self.device = ftd2xx.open(0)
+            print self.device
+        except ftd2xx.ftd2xx.DeviceError:
+            print "Unable to open 'EM2130 device'."
+            exit(1)
 
-    device.write("t11001\r\n")
-    time.sleep(0.001)  # allow 1ms delay between the commands
-    device.write("t_020\r\n")
-    time.sleep(0.001)
-    device.write("is_07\r\n")
-    time.sleep(0.001)
-    device.write("ip_0\r\n")
-    time.sleep(0.001)
-    if (device.getQueueStatus() > 0):
-        print device.read(device.getQueueStatus())
+        self.set_up_device(self.device)
 
-    # read bytes (serial mode)
+        self.configuration_command(self.device, "t11001")  # configure trigger time
+        self.configuration_command(self.device, "t_020")  # configure trigger timeout
+        self.configuration_command(self.device, "is_07")  # i2c speed 400kHz
+        self.configuration_command(self.device, "ip_0")  # control pin off (device turned off)
 
-    device.write("v\r\n")
+        # read version
+        self.device.write("v\r\n")
+        time.sleep(0.005)
 
-    time.sleep(0.001)
+        if self.device.getQueueStatus() > 0:
+            i = self.device.read(self.device.getQueueStatus())
+            print "version = " + i[1:]
 
-    if (device.getQueueStatus() > 0):
-        i = device.read(device.getQueueStatus())
-        print "version = " + i
+        # send query
+        self.vout_query_command(self.device, "iq_3f01028b")  # READ_VOUT
+        self.vin_query_command(self.device, "iq_3f010288")  # READ_VIN
 
-    device.write("iq_3f010221\r\n") # 3f is my slave address
-    time.sleep(0.001)
-    if (device.getQueueStatus() > 0):
-        print device.read(device.getQueueStatus())
+    def vout_query_command(self, device, command):
 
+        device.write(command + "\r\n")  # 3f is my slave address
+        time.sleep(0.005)
+        response = ""
+        if device.getQueueStatus() > 0:
+            response = device.read(device.getQueueStatus())
+        res = response.rstrip()
 
-    i = ftd2xx.getDeviceInfoDetail(0, True)
-    #print i
+        print "PMBus Response = 0x" + res[1:]
+        a = response[-4:]
+        b = response[1:3]
+        a = a.rstrip()
+        r = int("0x" + a + b, 0)
+        print "Block command = 0x" + a + b
 
+        x = linear_conversions.Linear_Convertions()
+        result = x.L16_to_float(r)
+        print "Result = " + str(result) + " V\n"
 
+    def vin_query_command(self, device, command):
+
+        device.write(command + "\r\n")  # 3f is my slave address
+        time.sleep(0.005)
+        response = ""
+        if device.getQueueStatus() > 0:
+            response = device.read(device.getQueueStatus())
+        res = response.rstrip()
+        print "PMBus Response = 0x" + res[1:]
+        a = response[-4:]
+        b = response[1:3]
+        a = a.rstrip()
+        r = int("0x" + a + b, 0)
+        print "Block command = 0x" + a + b
+
+        x = linear_conversions.Linear_Convertions()
+        result = x.L11_to_float(r)
+        print "Result = " + str(result) + " V\n"
 
 
 def main():
-    process()
+    s = PMBUS_COMMS()
+    s.process()
     print('\nDone!')
 
 if __name__ == '__main__':
     main()
+

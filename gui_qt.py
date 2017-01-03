@@ -8,6 +8,7 @@
 
 from PyQt4 import QtCore, QtGui
 import sys
+import plot
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -25,6 +26,7 @@ except AttributeError:
 
 
 class Ui_MainWindow(object):
+    PaintPanel = 0
 
     def setstyle(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
@@ -168,9 +170,13 @@ class Ui_MainWindow(object):
         self.page_2 = QtGui.QWidget()
         self.page_2.setObjectName(_fromUtf8("page_2"))
 
+        self.main_layout = QtGui.QGridLayout()
+        self.page_2.setLayout(self.main_layout)
+
         # create configuration group box
         self.configuration_box = QtGui.QGroupBox(self.page_2)
         self.size_and_name(self.configuration_box, 19, 9, 671, 401, "Sequencing")
+
 
         # define labels
         self.create_label(self.configuration_box, 10, 330, 61, 20, "Device Rise:")
@@ -243,7 +249,22 @@ class Ui_MainWindow(object):
         self.graph_frame.setFrameShape(QtGui.QFrame.StyledPanel)
         self.graph_frame.setFrameShadow(QtGui.QFrame.Raised)
         self.graph_frame.setObjectName(_fromUtf8("graph_frame"))
+        self.PaintPanel = plot.Example()
+        self.PaintPanel.close()
+        self.main_layout.addWidget(self.PaintPanel,0,0)
         self.stackedWidget.addWidget(self.page_2)
+
+    def paintEvent(self):
+        qp = QtGui.QPainter()
+        qp.begin(self)
+        self.drawLines(qp)
+        qp.end()
+
+    def drawLines(self, qp):
+        pen = QtGui.QPen(QtCore.Qt.black, 2, QtCore.Qt.SolidLine)
+        qp.setPen(pen)
+        qp.drawLine(200, 570, 600, 570)  # x axis
+
 
     def page3_pin(self, stackedWidget):
 
@@ -575,8 +596,6 @@ class Ui_MainWindow(object):
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-
-
     def page1(self):
         self.stackedWidget.setCurrentIndex(0)
 
@@ -601,5 +620,4 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-
 

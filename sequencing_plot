@@ -1,0 +1,84 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+import sys
+from PyQt4 import QtGui, QtCore
+
+class Example(QtGui.QWidget):
+    def __init__(self):
+        super(Example, self).__init__()
+
+        self.initUI()
+
+    def initUI(self):
+        self.setGeometry(300, 300, 631, 351)
+        self.show()
+
+    def paintEvent(self, e):
+        qp = QtGui.QPainter()
+        qp.begin(self)
+        self.drawLines(qp)
+        qp.end()
+
+    def drawLines(self, qp):
+
+        pen = QtGui.QPen(QtCore.Qt.black, 2, QtCore.Qt.SolidLine)
+        qp.setPen(pen)
+        qp.drawLine(80, 40, 80, 280)  # y axis
+        qp.drawLine(80, 280, 600, 280)  # x axis
+
+        pen = QtGui.QPen(QtCore.Qt.darkGray, 1, QtCore.Qt.SolidLine)  # horizontal dashed
+        pen.setStyle(QtCore.Qt.DashLine)
+        qp.setPen(pen)
+        qp.drawLine(80, 80, 600, 80)
+        qp.drawLine(80, 250, 600, 250)
+
+        pen = QtGui.QPen(QtCore.Qt.darkGray, 1, QtCore.Qt.SolidLine)  # vertical dashed
+        pen.setStyle(QtCore.Qt.DashLine)
+        qp.setPen(pen)
+        qp.drawLine(150, 80, 150, 280)
+        qp.drawLine(220, 80, 220, 280)
+        qp.drawLine(290, 80, 290, 280)
+        qp.drawLine(360, 80, 360, 280)
+        qp.drawLine(430, 80, 430, 280)
+        qp.drawLine(500, 80, 500, 280)
+        qp.drawLine(570, 80, 570, 280)
+
+        pen = QtGui.QPen(QtCore.Qt.blue, 2, QtCore.Qt.SolidLine)  # draw graph
+        qp.setPen(pen)
+        qp.drawLine(80, 279, 150, 279)
+        qp.drawLine(150, 279, 220, 80)
+        qp.drawLine(430, 80, 500, 280)  # when cut off is 0
+        qp.drawLine(500, 279, 570, 279)  # when cut off is 0
+        pen.setStyle(QtCore.Qt.CustomDashLine)
+        pen.setDashPattern([35, 13, 10, 13])
+        qp.setPen(pen)
+        qp.drawLine(220, 80, 430, 80)
+
+        pen = QtGui.QPen(QtCore.Qt.black, 1, QtCore.Qt.SolidLine)  # draw bottom legend lines
+        qp.setPen(pen)
+        qp.drawLine(80, 290, 80, 320)
+        qp.drawLine(150, 290, 150, 320)
+        qp.drawLine(220, 290, 220, 310)
+        qp.drawLine(290, 290, 290, 320)
+        qp.drawLine(360, 290, 360, 320)
+        qp.drawLine(430, 290, 430, 320)
+        qp.drawLine(500, 290, 500, 310)
+        qp.drawLine(570, 290, 570, 320)
+
+        # draw arrows
+        qp.drawLine(90, 295, 140, 295)
+        qp.drawLine(160, 295, 210, 295)
+        qp.drawLine(160, 315, 280, 315)
+        qp.drawLine(370, 295, 420, 295)
+        qp.drawLine(440, 295, 490, 295)
+        qp.drawLine(440, 315, 560, 315)
+
+
+def main():
+    app = QtGui.QApplication(sys.argv)
+    ex = Example()
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()

@@ -28,6 +28,9 @@ except AttributeError:
 class Ui_MainWindow(object):
     PaintPanel = 0
 
+    def __init__(self):
+        self.vout_off = QtGui.QLineEdit
+
     def setstyle(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(901, 577)
@@ -96,7 +99,7 @@ class Ui_MainWindow(object):
     def create_label(self, group, x, y, w, h, text):
         label = QtGui.QLabel(group)
         label.setGeometry(QtCore.QRect(x, y, w, h))
-        label.setText(_translate("MainWindow", text, None))
+        label.setText(text)
 
     def create_button_tab(self, frame, x, y, w, h, text, page):
         button_tab = QtGui.QToolButton(frame)
@@ -170,13 +173,9 @@ class Ui_MainWindow(object):
         self.page_2 = QtGui.QWidget()
         self.page_2.setObjectName(_fromUtf8("page_2"))
 
-        self.main_layout = QtGui.QGridLayout()
-        self.page_2.setLayout(self.main_layout)
-
         # create configuration group box
         self.configuration_box = QtGui.QGroupBox(self.page_2)
         self.size_and_name(self.configuration_box, 19, 9, 671, 401, "Sequencing")
-
 
         # define labels
         self.create_label(self.configuration_box, 10, 330, 61, 20, "Device Rise:")
@@ -207,41 +206,49 @@ class Ui_MainWindow(object):
         self.ton_delay.setGeometry(QtCore.QRect(160, 330, 41, 21))
         self.ton_delay.setObjectName(_fromUtf8("ton_delay"))
         self.text_validation(self.ton_delay)  # validate user input
+        self.ton_delay.textChanged.connect(self.handleEditingFinished)
 
         self.toff_delay = QtGui.QLineEdit(self.configuration_box)
         self.toff_delay.setGeometry(QtCore.QRect(160, 360, 41, 21))
         self.toff_delay.setObjectName(_fromUtf8("toff_delay"))
         self.text_validation(self.toff_delay)  # validate user input
+        self.toff_delay.textChanged.connect(self.handleEditingFinished)
 
         self.ton_rise = QtGui.QLineEdit(self.configuration_box)
         self.ton_rise.setGeometry(QtCore.QRect(320, 330, 41, 21))
         self.ton_rise.setObjectName(_fromUtf8("ton_rise"))
         self.text_validation(self.ton_rise)  # validate user input
+        self.ton_rise.textChanged.connect(self.handleEditingFinished)
 
         self.toff_fall = QtGui.QLineEdit(self.configuration_box)
         self.toff_fall.setGeometry(QtCore.QRect(320, 360, 41, 21))
         self.toff_fall.setObjectName(_fromUtf8("toff_fall"))
         self.text_validation(self.toff_fall)  # validate user input
+        self.toff_fall.textChanged.connect(self.handleEditingFinished)
 
         self.ton_max = QtGui.QLineEdit(self.configuration_box)
         self.ton_max.setGeometry(QtCore.QRect(480, 330, 41, 21))
         self.ton_max.setObjectName(_fromUtf8("ton_max"))
         self.text_validation(self.ton_max)  # validate user input
+        self.ton_max.textChanged.connect(self.handleEditingFinished)
 
         self.toff_max = QtGui.QLineEdit(self.configuration_box)
         self.toff_max.setGeometry(QtCore.QRect(480, 360, 41, 21))
         self.toff_max.setObjectName(_fromUtf8("toff_max"))
         self.text_validation(self.toff_max)  # validate user input
+        self.toff_max.textChanged.connect(self.handleEditingFinished)
 
         self.vout_on = QtGui.QLineEdit(self.configuration_box)
         self.vout_on.setGeometry(QtCore.QRect(600, 330, 41, 21))
         self.vout_on.setObjectName(_fromUtf8("vout_on"))
         self.text_validation(self.vout_on)  # validate user input
+        self.vout_on.textChanged.connect(self.handleEditingFinished)
 
         self.vout_off = QtGui.QLineEdit(self.configuration_box)
         self.vout_off.setGeometry(QtCore.QRect(600, 360, 41, 21))
         self.vout_off.setObjectName(_fromUtf8("vout_off"))
         self.text_validation(self.vout_off)  # validate user input
+        self.vout_off.textChanged.connect(self.handleEditingFinished)
 
         self.graph_frame = QtGui.QFrame(self.configuration_box)
         self.graph_frame.setGeometry(QtCore.QRect(20, 20, 631, 251))
@@ -249,22 +256,82 @@ class Ui_MainWindow(object):
         self.graph_frame.setFrameShape(QtGui.QFrame.StyledPanel)
         self.graph_frame.setFrameShadow(QtGui.QFrame.Raised)
         self.graph_frame.setObjectName(_fromUtf8("graph_frame"))
-        self.PaintPanel = plot.Example()
+
+        self.main_layout = QtGui.QGridLayout()
+        self.graph_frame.setLayout(self.main_layout)
+
+        # add plot diagram to graph_frame
+        self.PaintPanel = plot.Graph()
         self.PaintPanel.close()
-        self.main_layout.addWidget(self.PaintPanel,0,0)
+        self.main_layout.addWidget(self.PaintPanel, 0, 0)
+
+        #add labels to graph
+        self.create_label(self.configuration_box, 95, 231, 65, 20, "TON_DELAY")
+        self.create_label(self.configuration_box, 374, 231, 65, 20, "TOFF_DELAY")
+        self.create_label(self.configuration_box, 172, 231, 65, 20, "TON_RISE")
+        self.create_label(self.configuration_box, 450, 231, 65, 20, "TOFF_FALL")
+        self.create_label(self.configuration_box, 600, 220, 65, 20, "Time")
+
+        self.tonmax_label = QtGui.QLabel(self.configuration_box)
+        self.tonmax_label.setGeometry(QtCore.QRect(180, 250, 100, 20))
+        self.tonmax_label.setText("TON_MAX = 0.00")
+
+        self.toffmax_label = QtGui.QLabel(self.configuration_box)
+        self.toffmax_label.setGeometry(QtCore.QRect(465, 250, 100, 20))
+        self.toffmax_label.setText("TOFF_MAX = 0.00")
+
+        self.tondelay_label = QtGui.QLabel(self.configuration_box)
+        self.tondelay_label.setGeometry(QtCore.QRect(115, 200, 65, 20))
+        self.tondelay_label.setText("0.00")
+
+        self.tonrise_label = QtGui.QLabel(self.configuration_box)
+        self.tonrise_label.setGeometry(QtCore.QRect(189, 200, 65, 20))
+        self.tonrise_label.setText("0.00")
+
+        self.toffdelay_label = QtGui.QLabel(self.configuration_box)
+        self.toffdelay_label.setGeometry(QtCore.QRect(397, 200, 65, 20))
+        self.toffdelay_label.setText("0.00")
+
+        self.tofffall_label = QtGui.QLabel(self.configuration_box)
+        self.tofffall_label.setGeometry(QtCore.QRect(465, 200, 65, 20))
+        self.tofffall_label.setText("0.00")
+
+        self.voutoff_label = QtGui.QLabel(self.configuration_box)
+        self.voutoff_label.setGeometry(QtCore.QRect(30, 180, 100, 30))
+        self.voutoff_label.setText("VOUT OFF \n 0.00 V")
+
+        self.vouton_label = QtGui.QLabel(self.configuration_box)
+        self.vouton_label.setGeometry(QtCore.QRect(30, 60, 100, 30))
+        self.vouton_label.setText("VOUT ON \n 0.00 V")
+
+
         self.stackedWidget.addWidget(self.page_2)
 
-    def paintEvent(self):
-        qp = QtGui.QPainter()
-        qp.begin(self)
-        self.drawLines(qp)
-        qp.end()
-
-    def drawLines(self, qp):
-        pen = QtGui.QPen(QtCore.Qt.black, 2, QtCore.Qt.SolidLine)
-        qp.setPen(pen)
-        qp.drawLine(200, 570, 600, 570)  # x axis
-
+    def handleEditingFinished(self):
+        if self.toff_max.isModified():
+            self.toffmax_label.setText("TOFF_MAX = " + self.toff_max.text())
+        if self.ton_max.isModified():
+            self.tonmax_label.setText("TON_MAX = " + self.ton_max.text())
+        if self.ton_delay.isModified():
+            self.tondelay_label.setText(self.ton_delay.text())
+        if self.toff_delay.isModified():
+            self.toffdelay_label.setText(self.toff_delay.text())
+        if self.ton_rise.isModified():
+            self.tonrise_label.setText(self.ton_rise.text())
+        if self.toff_fall.isModified():
+            self.tofffall_label.setText(self.toff_fall.text())
+        if self.vout_on.isModified():
+            self.vouton_label.setText("VOUT ON \n " + self.vout_on.text() + " V")
+        if self.vout_off.isModified():
+            self.voutoff_label.setText("VOUT OFF \n " + self.vout_off.text() + " V")
+        self.toff_max.setModified(False)
+        self.ton_max.setModified(False)
+        self.ton_delay.setModified(False)
+        self.toff_delay.setModified(False)
+        self.ton_rise.setModified(False)
+        self.toff_fall.setModified(False)
+        self.vout_off.setModified(False)
+        self.vout_on.setModified(False)
 
     def page3_pin(self, stackedWidget):
 

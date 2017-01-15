@@ -5,32 +5,34 @@ import ftd2xx
 import time
 import sys
 import linear_conversions
+
+
 class PMBUS_COMMS:
 
-    def set_up_device(self, device):
+    def set_up_device(self):
 
         # set baud rate
-        device.setBaudRate(1 * 1000 * 1000)
+        self.device.setBaudRate(1 * 1000 * 1000)
         # set data characteristics
-        device.setDataCharacteristics(ftd2xx.ftd2xx.BITS_8, ftd2xx.ftd2xx.STOP_BITS_1, ftd2xx.ftd2xx.PARITY_NONE)
+        self.device.setDataCharacteristics(ftd2xx.ftd2xx.BITS_8, ftd2xx.ftd2xx.STOP_BITS_1, ftd2xx.ftd2xx.PARITY_NONE)
         # purge
-        device.purge()
+        self.device.purge()
         # set RX/TX timeouts
-        device.setTimeouts(300, 300)
+        self.device.setTimeouts(300, 300)
         # set bit mode
-        device.setBitMode(0xFF, 0x40)
+        self.device.setBitMode(0xFF, 0x40)
         # set flow control
-        device.setFlowControl(ftd2xx.ftd2xx.FLOW_NONE, 0, 0)
+        self.device.setFlowControl(ftd2xx.ftd2xx.FLOW_NONE, 0, 0)
         # set chars
-        device.setChars(0x0A, 0x7F, 0, 0)
+        self.device.setChars(0x0A, 0x7F, 0, 0)
         # set event notification
         # device.setEventNotification(ftd2xx.ftd2xx.EVENT_RXCHAR)
 
-    def configuration_command(self, device, command):
+    def configuration_command(self, command):
 
-        device.write(command + "\r\n")
+        self.device.write(command + "\r\n")
         time.sleep(0.005)  # allow 5ms delay between the commands
-        device.read(device.getQueueStatus())
+        self.device.read(self.device.getQueueStatus())
 
     def process(self):
 
@@ -45,12 +47,12 @@ class PMBUS_COMMS:
             print "Unable to open 'EM2130 device'."
             exit(1)
 
-        self.set_up_device(self.device)
+        self.set_up_device()
 
-        self.configuration_command(self.device, "t11001")  # configure trigger time
-        self.configuration_command(self.device, "t_020")  # configure trigger timeout
-        self.configuration_command(self.device, "is_07")  # i2c speed 400kHz
-        self.configuration_command(self.device, "ip_0")  # control pin off (device turned off)
+        self.configuration_command("t11001")  # configure trigger time
+        self.configuration_command("t_020")  # configure trigger timeout
+        self.configuration_command("is_07")  # i2c speed 400kHz
+        self.configuration_command("ip_0")  # control pin off (device turned off)
 
         # read version
         self.device.write("v\r\n")
@@ -60,17 +62,21 @@ class PMBUS_COMMS:
             i = self.device.read(self.device.getQueueStatus())
             print "version = " + i[1:]
 
+        #return self.device
+
         # send query
-        self.vout_query_command(self.device, "iq_3f01028b")  # READ_VOUT
-        self.vin_query_command(self.device, "iq_3f010288")  # READ_VIN
+        # x = self.vout_query_command("iq_3f01028b")  # READ_VOUT
+        # print x
+        y = self.vin_query_command(self.device, "iq_3f010288")  # READ_VIN
+        print y
 
-    def vout_query_command(self, device, command):
+    def vout_query_command(self, command):
 
-        device.write(command + "\r\n")  # 3f is my slave address
+        self.device.write(command + "\r\n")  # 3f is my slave address
         time.sleep(0.005)
         response = ""
-        if device.getQueueStatus() > 0:
-            response = device.read(device.getQueueStatus())
+        if self.device.getQueueStatus() > 0:
+            response = self.device.read(self.device.getQueueStatus())
         res = response.rstrip()
 
         print "PMBus Response = 0x" + res[1:]
@@ -83,6 +89,7 @@ class PMBUS_COMMS:
         x = linear_conversions.Linear_Convertions()
         result = x.L16_to_float(r)
         print "Result = " + str(result) + " V\n"
+        return str(result)
 
     def vin_query_command(self, device, command):
 
@@ -101,7 +108,8 @@ class PMBUS_COMMS:
 
         x = linear_conversions.Linear_Convertions()
         result = x.L11_to_float(r)
-        print "Result = " + str(result) + " V\n"
+        print "Result = %.2f" % result + " V\n"
+        return str(result)
 
 
 def main():
@@ -111,4 +119,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

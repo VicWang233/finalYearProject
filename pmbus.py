@@ -3,8 +3,8 @@
 # import the PyUSB module
 import ftd2xx
 import time
-import sys
-import linear_conversions
+import Linear_Conversions
+import re
 
 
 class PMBUS_COMMS:
@@ -62,34 +62,41 @@ class PMBUS_COMMS:
             i = self.device.read(self.device.getQueueStatus())
             print "version = " + i[1:]
 
-        #return self.device
+        return self.device
 
         # send query
-        # x = self.vout_query_command("iq_3f01028b")  # READ_VOUT
-        # print x
-        y = self.vin_query_command(self.device, "iq_3f010288")  # READ_VIN
-        print y
+        #x = self.vout_query_command(self.device, "iq_3f01028b")  # READ_VOUT
+        #print x
+        #y = self.vin_query_command(self.device, "iq_3f010288")  # READ_VIN
+        #print y
 
-    def vout_query_command(self, command):
+    def vout_query_command(self, device,  command):
 
-        self.device.write(command + "\r\n")  # 3f is my slave address
+        device.write(command + "\r\n")  # 3f is my slave address
         time.sleep(0.005)
         response = ""
-        if self.device.getQueueStatus() > 0:
-            response = self.device.read(self.device.getQueueStatus())
+        if device.getQueueStatus() > 0:
+            response = device.read(device.getQueueStatus())
         res = response.rstrip()
 
         print "PMBus Response = 0x" + res[1:]
         a = response[-4:]
         b = response[1:3]
         a = a.rstrip()
-        r = int("0x" + a + b, 0)
-        print "Block command = 0x" + a + b
+        b = b.rstrip()
+        if (re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", a) and
+                re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", b)):
+            r = int("0x" + a + b, 0)
+            print "Block command = 0x" + a + b
+            x = Linear_Conversions.Linear_Convertions()
+            result = x.L16_to_float(r)
+            print "Result = " + str(result) + " V\n"
+            val = ("%.2f" % result)
+            return val
+        else:
+            print("ERROR - Unvalid response\n")
+            return "Error"
 
-        x = linear_conversions.Linear_Convertions()
-        result = x.L16_to_float(r)
-        print "Result = " + str(result) + " V\n"
-        return str(result)
 
     def vin_query_command(self, device, command):
 
@@ -103,13 +110,19 @@ class PMBUS_COMMS:
         a = response[-4:]
         b = response[1:3]
         a = a.rstrip()
-        r = int("0x" + a + b, 0)
-        print "Block command = 0x" + a + b
-
-        x = linear_conversions.Linear_Convertions()
-        result = x.L11_to_float(r)
-        print "Result = %.2f" % result + " V\n"
-        return str(result)
+        b = b.rstrip()
+        if (re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", a) and
+                re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", b)):
+            r = int("0x" + a + b, 0)
+            print "Block command = 0x" + a + b
+            x = Linear_Conversions.Linear_Convertions()
+            result = x.L11_to_float(r)
+            print "Result = %.2f" % result + " V\n"
+            val = ("%.2f" % result)
+            return val
+        else:
+            print("ERROR - Unvalid response\n")
+            return "Error"
 
 
 def main():

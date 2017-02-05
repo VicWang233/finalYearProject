@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
-import plot
-import pmbus
+import Painter
+import Monitoring
+import functools
+import PMBus_Comms
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -113,8 +115,18 @@ class Ui_MainWindow(object):
         self.size_and_name(self.power_stage_box, 19, 9, 671, 401, "Power Stage")
 
         # frame for block diagram of EM2130
-        self.block_diagram_frame = QtGui.QFrame(self.power_stage_box)
-        self.block_diagram_frame.setGeometry(QtCore.QRect(20, 20, 451, 371))
+        self.schematic = QtGui.QLabel(self.power_stage_box)
+        self.schematic.setGeometry(QtCore.QRect(20, 20, 451, 371))
+        pixmap = QtGui.QPixmap('blockdiagram-em2130.jpg')
+        self.schematic.setPixmap(pixmap)
+
+        #x = PMBus_Comms.PMBUS_COMMS()
+        # vin_val ?????
+        #vout_val = x.vout_query_command(self.device, "iq_3f010221")  # vout_command L16
+        #margin_high_val = x.vout_query_command(self.device, "iq_3f010225")
+        #margin_low_val = x.vout_query_command(self.device, "iq_3f010226")
+
+        vout_val = "0.00"
 
         # voltage group box
         self.voltage_box = QtGui.QGroupBox(self.power_stage_box)
@@ -123,18 +135,22 @@ class Ui_MainWindow(object):
         # text fields for voltage group
         self.vin_value_main = QtGui.QLineEdit(self.voltage_box)
         self.vin_value_main.setGeometry(QtCore.QRect(60, 50, 81, 21))
+        self.vin_value_main.setText("12")
         self.text_validation(self.vin_value_main)  # validate user input
 
         self.vout_value_main = QtGui.QLineEdit(self.voltage_box)
         self.vout_value_main.setGeometry(QtCore.QRect(60, 90, 81, 21))
+        self.vout_value_main.setText(vout_val)
         self.text_validation(self.vout_value_main)  # validate user input
 
         self.margin_high = QtGui.QLineEdit(self.voltage_box)
         self.margin_high.setGeometry(QtCore.QRect(90, 170, 51, 21))
+        self.margin_high.setText("5")
         self.text_validation(self.margin_high)  # validate user input
 
         self.margin_low = QtGui.QLineEdit(self.voltage_box)
         self.margin_low.setGeometry(QtCore.QRect(90, 210, 51, 21))
+        self.margin_low.setText("5")
         self.text_validation(self.margin_low)  # validate user input
 
         # define labels
@@ -155,13 +171,28 @@ class Ui_MainWindow(object):
         # create page 2
         self.page_2 = QtGui.QWidget()
 
-        x = pmbus.PMBUS_COMMS()
+        '''
+        x = PMBus_Comms.PMBUS_COMMS()
         ton_delay_val = x.vin_query_command(self.device, "iq_3f010260")
         toff_delay_val = x.vin_query_command(self.device, "iq_3f010264")
         ton_rise_val = x.vin_query_command(self.device, "iq_3f010261")
         toff_fall_val = x.vin_query_command(self.device, "iq_3f010265")
         ton_max_val = x.vin_query_command(self.device, "iq_3f010262")  # ton max fault limit L11
         toff_max_val = x.vin_query_command(self.device, "iq_3f010266")  # toff_max warn limit L11
+        vout_on_val = x.vout_query_command(self.device, "iq_3f010221")  # vout command L16
+        vout_off_val = x.vout_query_command(self.device, "iq_3f0102E0")  # mfr_vout_off L16
+
+        '''
+        # default for test only !!!!
+        ton_delay_val = "0.0"
+        toff_delay_val = "0.00"
+        ton_rise_val = "0.00"
+        toff_fall_val = "0.00"
+        ton_max_val = "0.00"
+        toff_max_val = "0.0"
+        vout_off_val = "0.0"
+        vout_on_val = "0.0"
+
 
         # create configuration group box
         self.configuration_box = QtGui.QGroupBox(self.page_2)
@@ -230,11 +261,13 @@ class Ui_MainWindow(object):
 
         self.vout_on = QtGui.QLineEdit(self.configuration_box)
         self.vout_on.setGeometry(QtCore.QRect(600, 330, 41, 21))
+        self.vout_on.setText(vout_on_val)
         self.text_validation(self.vout_on)  # validate user input
         self.vout_on.textChanged.connect(self.handleEditingFinished)
 
         self.vout_off = QtGui.QLineEdit(self.configuration_box)
         self.vout_off.setGeometry(QtCore.QRect(600, 360, 41, 21))
+        self.vout_off.setText(vout_off_val)
         self.text_validation(self.vout_off)  # validate user input
         self.vout_off.textChanged.connect(self.handleEditingFinished)
 
@@ -245,7 +278,7 @@ class Ui_MainWindow(object):
         self.graph_frame.setLayout(self.main_layout)
 
         # add plot diagram to graph_frame
-        self.paint_panel = plot.Graph()
+        self.paint_panel = Painter.Graph()
         self.paint_panel.close()
         self.main_layout.addWidget(self.paint_panel, 0, 0)
 
@@ -282,11 +315,11 @@ class Ui_MainWindow(object):
 
         self.voutoff_label = QtGui.QLabel(self.configuration_box)
         self.voutoff_label.setGeometry(QtCore.QRect(30, 180, 100, 30))
-        self.voutoff_label.setText("VOUT OFF \n 0.00 V")
+        self.voutoff_label.setText("VOUT OFF \n" + vout_off_val + " V")
 
         self.vouton_label = QtGui.QLabel(self.configuration_box)
         self.vouton_label.setGeometry(QtCore.QRect(30, 60, 100, 30))
-        self.vouton_label.setText("VOUT ON \n 0.00 V")
+        self.vouton_label.setText("VOUT ON \n" + vout_on_val + " V")
 
 
         self.stackedWidget.addWidget(self.page_2)
@@ -380,7 +413,6 @@ class Ui_MainWindow(object):
         self.create_label(self.protection_box, 310, 30, 51, 16, "Fault Limit")
         self.create_label(self.protection_box, 450, 30, 61, 16, "Time Delay")
         self.create_label(self.protection_box, 250, 90, 21, 20, "V")
-        self.create_label(self.protection_box, 250, 90, 21, 20, "V")
         self.create_label(self.protection_box, 250, 140, 21, 20, "V")
         self.create_label(self.protection_box, 250, 190, 21, 20, "V")
         self.create_label(self.protection_box, 250, 240, 21, 20, "V")
@@ -395,46 +427,56 @@ class Ui_MainWindow(object):
         self.create_label(self.protection_box, 590, 30, 31, 16, "Alert")
         self.create_label(self.protection_box, 20, 140, 51, 16, "VOUT UV")
         self.create_label(self.protection_box, 20, 240, 46, 13, "VIN UV")
-        self.create_label(self.protection_box, 250, 340, 21, 20, "°C")
+        self.create_label(self.protection_box, 250, 340, 21, 20, "C")
         self.create_label(self.protection_box, 250, 290, 21, 20, "A")
         self.create_label(self.protection_box, 530, 290, 21, 20, "ms")
         self.create_label(self.protection_box, 530, 340, 21, 20, "ms")
-        self.create_label(self.protection_box, 390, 340, 21, 20, "°C")
+        self.create_label(self.protection_box, 390, 340, 21, 20, "C")
         self.create_label(self.protection_box, 390, 290, 21, 20, "A")
         self.create_label(self.protection_box, 580, 60, 21, 20, "W")
         self.create_label(self.protection_box, 620, 60, 21, 20, "F")
 
+        #x = PMBus_Comms.PMBUS_COMMS()
+
         # text fields
         self.vout_ov_warning = QtGui.QLineEdit(self.protection_box)
         self.vout_ov_warning.setGeometry(QtCore.QRect(160, 90, 81, 21))
+        #self.vout_ov_warning.setText(x.vout_query_command(self.device, "iq_3f010242"))
         self.text_validation(self.vout_ov_warning)  # validate user input
 
         self.vout_uv_warning = QtGui.QLineEdit(self.protection_box)
         self.vout_uv_warning.setGeometry(QtCore.QRect(160, 140, 81, 21))
+        #self.vout_uv_warning.setText(x.vout_query_command(self.device, "iq_3f010243"))
         self.text_validation(self.vout_uv_warning)  # validate user input
 
         self.vin_ov_warning = QtGui.QLineEdit(self.protection_box)
         self.vin_ov_warning.setGeometry(QtCore.QRect(160, 190, 81, 21))
+        #self.vin_ov_warning.setText(x.vin_query_command(self.device, "iq_3f010257"))
         self.text_validation(self.vin_ov_warning)  # validate user input
 
         self.vin_uv_warning = QtGui.QLineEdit(self.protection_box)
         self.vin_uv_warning.setGeometry(QtCore.QRect(160, 240, 81, 21))
+        #self.vin_uv_warning.setText(x.vin_query_command(self.device, "iq_3f010258"))
         self.text_validation(self.vin_uv_warning)  # validate user input
 
         self.vout_ov_fault = QtGui.QLineEdit(self.protection_box)
         self.vout_ov_fault.setGeometry(QtCore.QRect(300, 90, 81, 21))
+        #self.vout_ov_fault.setText(x.vout_query_command(self.device, "iq_3f010240"))
         self.text_validation(self.vout_ov_fault)  # validate user input
 
         self.vout_uv_fault = QtGui.QLineEdit(self.protection_box)
         self.vout_uv_fault.setGeometry(QtCore.QRect(300, 140, 81, 21))
+        #self.vout_uv_fault.setText(x.vout_query_command(self.device, "iq_3f010244"))
         self.text_validation(self.vout_uv_fault)  # validate user input
 
         self.vin_ov_fault = QtGui.QLineEdit(self.protection_box)
         self.vin_ov_fault.setGeometry(QtCore.QRect(300, 190, 81, 21))
+        #self.vin_ov_fault.setText(x.vin_query_command(self.device, "iq_3f010255"))
         self.text_validation(self.vin_ov_fault)  # validate user input
 
         self.vin_uv_fault = QtGui.QLineEdit(self.protection_box)
         self.vin_uv_fault.setGeometry(QtCore.QRect(300, 240, 81, 21))
+        #self.vin_uv_fault.setText(x.vin_query_command(self.device, "iq_3f010259"))
         self.text_validation(self.vin_uv_fault)  # validate user input
 
         self.vout_ov_delay = QtGui.QLineEdit(self.protection_box)
@@ -455,18 +497,22 @@ class Ui_MainWindow(object):
 
         self.iout_oc_warning = QtGui.QLineEdit(self.protection_box)
         self.iout_oc_warning.setGeometry(QtCore.QRect(160, 290, 81, 21))
+        #self.iout_oc_warning.setText(x.vin_query_command(self.device, "iq_3f01024A"))
         self.text_validation(self.iout_oc_warning)  # validate user input
 
         self.temp_ot_warning = QtGui.QLineEdit(self.protection_box)
         self.temp_ot_warning.setGeometry(QtCore.QRect(160, 340, 81, 21))
+        #self.temp_ot_warning.setText(x.vin_query_command(self.device, "iq_3f010251"))
         self.text_validation(self.temp_ot_warning)  # validate user input
 
         self.temp_ot_fault = QtGui.QLineEdit(self.protection_box)
         self.temp_ot_fault.setGeometry(QtCore.QRect(300, 340, 81, 21))
+        #self.temp_ot_fault.setText(x.vin_query_command(self.device, "iq_3f01024F"))
         self.text_validation(self.temp_ot_fault)  # validate user input
 
         self.iout_oc_fault = QtGui.QLineEdit(self.protection_box)
         self.iout_oc_fault.setGeometry(QtCore.QRect(300, 290, 81, 21))
+        #self.iout_oc_fault.setText(x.vin_query_command(self.device, "iq_3f010246"))
         self.text_validation(self.iout_oc_fault)  # validate user input
 
         self.vin_uv_delay = QtGui.QLineEdit(self.protection_box)
@@ -493,32 +539,69 @@ class Ui_MainWindow(object):
         self.clear_faults_but.setGeometry(QtCore.QRect(10, 240, 71, 23))
         self.clear_faults_but.setText("Clear Faults")
 
+        #x = PMBus_Comms.PMBUS_COMMS()
+
         # define labels
         self.create_label(self.monitoring_box, 10, 40, 31, 21, "VIN:")
         self.create_label(self.monitoring_box, 10, 90, 41, 20, "VOUT:")
         self.create_label(self.monitoring_box, 10, 140, 31, 20, "IOUT:")
         self.create_label(self.monitoring_box, 10, 190, 41, 20, "TEMP:")
-        self.create_label(self.monitoring_box, 60, 40, 46, 21, "0 V")
-        self.create_label(self.monitoring_box, 60, 90, 46, 21, "0 V")
-        self.create_label(self.monitoring_box, 60, 140, 46, 21, "0 A")
-        self.create_label(self.monitoring_box, 60, 190, 46, 21, "0 °C")
+        #self.create_label(self.monitoring_box, 60, 40, 46, 21, x.vin_query_command(self.device, "iq_3f010288")) # read vin
+        #self.create_label(self.monitoring_box, 60, 90, 46, 21, x.vout_query_command(self.device, "iq_3f010221")) # vout command?
+        #self.create_label(self.monitoring_box, 60, 140, 46, 21, x.vin_query_command(self.device, "iq_3f01028C")) # read iout
+        #self.create_label(self.monitoring_box, 60, 190, 46, 21, x.vin_query_command(self.device, "iq_3f01028D")) # read temp 1?
 
         # create frames for monitoring graphs
-        self.input_voltage_graph = QtGui.QFrame(self.monitoring_box)
-        self.input_voltage_graph.setGeometry(QtCore.QRect(90, 20, 281, 181))
+        self.monitoring_frame = QtGui.QFrame(self.monitoring_box)
+        self.monitoring_frame.setGeometry(QtCore.QRect(90, 20, 565, 365))
 
-        self.output_current_graph = QtGui.QFrame(self.monitoring_box)
-        self.output_current_graph.setGeometry(QtCore.QRect(90, 210, 281, 181))
+        self.scrolllayout = QtGui.QVBoxLayout()
+        scrollwidget = QtGui.QWidget()
+        scrollwidget.setLayout(self.scrolllayout)
 
-        self.temp_graph = QtGui.QFrame(self.monitoring_box)
-        self.temp_graph.setGeometry(QtCore.QRect(380, 210, 281, 181))
+        scroll = QtGui.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(scrollwidget)
 
-        self.output_voltage_graph = QtGui.QFrame(self.monitoring_box)
-        self.output_voltage_graph.setGeometry(QtCore.QRect(380, 20, 281, 181))
+        self.matplotlib = Monitoring.Matplotlib_Widget()
+        self.input_vol_thread = Monitoring.Input_Vol_Thread()
+        self.display_plot(self.matplotlib, "Input voltage (V)", self.input_vol_thread)
 
+        self.matplotlib2 = Monitoring.Matplotlib_Widget()
+        self.output_vol_thread = Monitoring.Output_Vol_Thread()
+        self.display_plot(self.matplotlib2, "Output voltage (V)", self.output_vol_thread)
+
+        self.matplotlib3 = Monitoring.Matplotlib_Widget()
+        self.output_cur_thread = Monitoring.Output_Cur_Thread()
+        self.display_plot(self.matplotlib3, "Output current (A)", self.output_cur_thread)
+
+        self.matplotlib4 = Monitoring.Matplotlib_Widget()
+        self.temp_thread = Monitoring.Temp_Thread()
+        self.display_plot(self.matplotlib4, "Temperature (C)", self.temp_thread)
+
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(scroll)
+        self.monitoring_frame.setLayout(layout)
         self.stackedWidget.addWidget(self.page_5)
 
-    def info_panel(self, centralWidget):
+    def display_plot(self, widget, name, thread):
+        self.samples = 0
+        groupbox = QtGui.QGroupBox(name)
+        grouplayout = QtGui.QHBoxLayout()
+        # add plot diagram to graph_frame
+        widget.axis.clear()
+        grouplayout.addWidget(widget)
+        groupbox.setLayout(grouplayout)
+        self.scrolllayout.addWidget(groupbox)
+        thread.start()
+        thread.new_sample.connect(lambda sample: self.new_thread(sample, widget))
+
+    @QtCore.pyqtSlot(list)
+    def new_thread(self, sample, widget):
+        widget.axis.plot(sample)
+        widget.canvas.draw()
+
+    def info_panel(self):
         self.info_frame = QtGui.QFrame(self.centralwidget)
         self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 511))
 
@@ -545,8 +628,8 @@ class Ui_MainWindow(object):
         self.stackedWidget.setAutoFillBackground(False)
 
         #  connect with device
-        x = pmbus.PMBUS_COMMS()
-        self.device = x.process()
+        # x = PMBus_Comms.PMBus_Comms()
+        # self.device = x.process()
 
         # create page1
         self.page1_main(self.stackedWidget)
@@ -564,7 +647,7 @@ class Ui_MainWindow(object):
         self.page5_monitor(self.stackedWidget)
 
         # device info - left panel
-        self.info_panel(self.centralwidget)
+        self.info_panel()
 
         # menu bar & status bar
         MainWindow.setCentralWidget(self.centralwidget)
@@ -591,13 +674,4 @@ class Ui_MainWindow(object):
     def page5(self):
         self.stackedWidget.setCurrentIndex(4)
 
-
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    MainWindow = QtGui.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
 

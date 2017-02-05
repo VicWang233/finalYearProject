@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+
+# WORK ON PLOTTING EXAMPLE
+
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
+from PyQt4 import QtCore, QtGui
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+
+import pylab
+from pylab import *
+import random
+
+
+class Matplotlib_Widget(QtGui.QWidget):
+    def __init__(self):
+        super(Matplotlib_Widget, self).__init__()
+
+        self.figure = Figure()
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.setMinimumSize(100, 250)
+
+        self.axis = self.figure.add_subplot(111)
+
+        self.layoutVertical = QtGui.QVBoxLayout(self)
+        self.layoutVertical.addWidget(self.canvas)
+
+
+class Input_Vol_Thread(QtCore.QThread):
+    new_sample = QtCore.pyqtSignal(list)
+
+    def __init__(self):
+        super(Input_Vol_Thread, self).__init__()
+
+    def run(self):
+        random_sample = random.sample(range(0, 10), 10)
+        self.new_sample.emit(random_sample)
+
+
+class Output_Vol_Thread(QtCore.QThread):
+    new_sample = QtCore.pyqtSignal(list)
+
+    def __init__(self):
+        super(Output_Vol_Thread, self).__init__()
+
+    def run(self):
+        random_sample = random.sample(range(0, 10), 10)
+        self.new_sample.emit(random_sample)
+
+
+class Output_Cur_Thread(QtCore.QThread):
+    new_sample = QtCore.pyqtSignal(list)
+
+    def __init__(self):
+        super(Output_Cur_Thread, self).__init__()
+
+    def run(self):
+        random_sample = random.sample(range(0, 10), 10)
+        self.new_sample.emit(random_sample)
+
+
+class Temp_Thread(QtCore.QThread):
+    new_sample = QtCore.pyqtSignal(list)
+
+    def __init__(self):
+        super(Temp_Thread, self).__init__()
+
+    def run(self):
+        random_sample = random.sample(range(0, 10), 10)
+        self.new_sample.emit(random_sample)
+

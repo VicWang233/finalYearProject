@@ -1,73 +1,61 @@
-#!/usr/bin/env python
-
-# WORK ON PLOTTING EXAMPLE
-
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+import numpy as np
+from PyQt4 import QtCore
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-from PyQt4 import QtCore, QtGui
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
-
-import pylab
-from pylab import *
+mpl.use('TkAgg')
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import random
 
 
-class Matplotlib_Widget(QtGui.QWidget):
-    def __init__(self):
-        super(Matplotlib_Widget, self).__init__()
-
-        self.figure = Figure()
-        self.canvas = FigureCanvasQTAgg(self.figure)
-        self.canvas.setMinimumSize(100, 250)
-
-        self.axis = self.figure.add_subplot(111)
-
-        self.layoutVertical = QtGui.QVBoxLayout(self)
-        self.layoutVertical.addWidget(self.canvas)
-
-
-class Input_Vol_Thread(QtCore.QThread):
-    new_sample = QtCore.pyqtSignal(list)
+class GraphCanvas(FigureCanvas):
 
     def __init__(self):
-        super(Input_Vol_Thread, self).__init__()
+        self.current_timer = None
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
+        super(GraphCanvas, self).__init__(self.fig)
+        self.init_figure()
 
-    def run(self):
-        random_sample = random.sample(range(0, 10), 10)
-        self.new_sample.emit(random_sample)
-
-
-class Output_Vol_Thread(QtCore.QThread):
-    new_sample = QtCore.pyqtSignal(list)
-
-    def __init__(self):
-        super(Output_Vol_Thread, self).__init__()
-
-    def run(self):
-        random_sample = random.sample(range(0, 10), 10)
-        self.new_sample.emit(random_sample)
+        # init data
+        self.data = [0 for x in range(10)]
+        self.t0 = float(self.data[0])
+        # start timer
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.update_figure)
+        self.timer.start(1)  # 1 = 1 msec , 1000 = 1 sec
 
 
-class Output_Cur_Thread(QtCore.QThread):
-    new_sample = QtCore.pyqtSignal(list)
+    def init_figure(self):
+        font = {
+                'weight': 'normal',
+                'size': 10,
+                }
+        plt.grid()
+        plt.gcf().subplots_adjust(bottom=0.15)  # give some space for x label
+        self.fig.patch.set_facecolor('none')  # set graph background color to transparent
 
-    def __init__(self):
-        super(Output_Cur_Thread, self).__init__()
+        self.time_axis = np.zeros(10)
+        self.y_axis = np.zeros(10)
+        self.ax.set_ylim(-5, 5)
+        self.ax.set_xlim(0, 5)
 
-    def run(self):
-        random_sample = random.sample(range(0, 10), 10)
-        self.new_sample.emit(random_sample)
+        self.fig.canvas.draw()
+        self.line = self.ax.plot(self.time_axis, self.y_axis)
+        self.ax.set_xlabel("Time[ms]", font)
+        self.ax.set_ylabel("Voltage[V]", font)
+
+    def update_figure(self):
+        self.data = np.append(self.data, random.random())
+        current_xaxis = np.arange(len(self.data) - 10, len(self.data), 1)
+        self.line[0].set_data(current_xaxis, np.array(self.data[-10:]))
+        self.ax.set_xlim(current_xaxis.min(), current_xaxis.max())
+
+        self.figure.canvas.flush_events()
+        self.fig.canvas.draw()
 
 
-class Temp_Thread(QtCore.QThread):
-    new_sample = QtCore.pyqtSignal(list)
 
-    def __init__(self):
-        super(Temp_Thread, self).__init__()
 
-    def run(self):
-        random_sample = random.sample(range(0, 10), 10)
-        self.new_sample.emit(random_sample)
+
+
 

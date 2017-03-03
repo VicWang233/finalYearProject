@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-
 from PyQt4 import QtCore, QtGui
 import Painter
 import Monitoring
-import functools
 import PMBus_Comms
+
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -14,6 +13,7 @@ except AttributeError:
 
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
+
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
@@ -21,14 +21,14 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 
-class Ui_MainWindow(object):
+class GuiMainWindow(object):
 
     def __init__(self):
         self.paint_panel = 0
 
-    def setstyle(self, MainWindow):
-        MainWindow.resize(901, 577)
-        MainWindow.setStyleSheet(_fromUtf8("QFrame{\n"
+    def setstyle(self, main_window):
+        main_window.resize(901, 577)
+        main_window.setStyleSheet(_fromUtf8("QFrame{\n"
                                            "background-color:rgb(255, 255, 255);\n"
                                            "border: 1px solid rgb(147, 147, 147)\n"
                                            "}\n"
@@ -65,7 +65,7 @@ class Ui_MainWindow(object):
     def menu(self):
 
         # create new buttons_frame and put menu buttons in there
-        self.buttons_frame = QtGui.QFrame(self.centralwidget)
+        self.buttons_frame = QtGui.QFrame(self.central_widget)
         self.buttons_frame.setGeometry(QtCore.QRect(180, 10, 711, 71))
         self.buttons_frame.setFrameShape(QtGui.QFrame.StyledPanel)
         self.buttons_frame.setFrameShadow(QtGui.QFrame.Raised)
@@ -82,6 +82,7 @@ class Ui_MainWindow(object):
         self.create_button_tab(self.buttons_frame, 570, 10, 131, 51, "Monitoring", self.page5)
 
     def text_validation(self, text_field):
+
         # !! ReGex implementation !!
         reg_ex = QtCore.QRegExp("[0-9]\.?[0-9]\.?[0-9]+")
         text_validator = QtGui.QRegExpValidator(reg_ex, text_field)
@@ -89,12 +90,14 @@ class Ui_MainWindow(object):
         # !! ReGex implementation End !!
 
     def create_label(self, group, x, y, w, h, text):
+
         label = QtGui.QLabel(group)
         label.setGeometry(QtCore.QRect(x, y, w, h))
         label.setText(text)
         return label
 
     def create_button_tab(self, frame, x, y, w, h, text, page):
+
         button_tab = QtGui.QToolButton(frame)
         button_tab.setGeometry(QtCore.QRect(x, y, w, h))
         button_tab.setCheckable(True)
@@ -103,19 +106,112 @@ class Ui_MainWindow(object):
         button_tab.setText(_translate("MainWindow", text, None))
 
     def size_and_name(self, component, x, y, w, h, name):
+
         component.setGeometry(QtCore.QRect(x, y, w, h))
         component.setTitle(_translate("MainWindow", name, None))
 
     def create_line_edit(self, frame, x, y, w, h, text):
+
         line_edit = QtGui.QLineEdit(frame)
         line_edit.setGeometry(QtCore.QRect(x, y, w, h))
         line_edit.setAlignment(QtCore.Qt.AlignRight)
         line_edit.setText(text)
         self.text_validation(line_edit)  # validate user input
-        line_edit.textChanged.connect(self.handleEditingFinished)
+        line_edit.textChanged.connect(self.handle_editing_finished)
         return line_edit
 
+    def create_checkbox(self, frame, x, y, w, h):
+
+        checkbox = QtGui.QCheckBox(frame)
+        checkbox.setGeometry(QtCore.QRect(x, y, w, h))
+        checkbox.setChecked(True)
+        checkbox.stateChanged.connect(self.state_changed)
+        return checkbox
+
+    def handle_editing_finished(self):
+
+        if self.toff_max.isModified():
+            self.toffmax_label.setText("TOFF_MAX = " + self.toff_max.text())
+        elif self.ton_max.isModified():
+            self.tonmax_label.setText("TON_MAX = " + self.ton_max.text())
+        elif self.ton_delay.isModified():
+            self.tondelay_label.setText(self.ton_delay.text())
+        elif self.toff_delay.isModified():
+            self.toffdelay_label.setText(self.toff_delay.text())
+        elif self.ton_rise.isModified():
+            self.tonrise_label.setText(self.ton_rise.text())
+        elif self.toff_fall.isModified():
+            self.tofffall_label.setText(self.toff_fall.text())
+        elif self.vout_on.isModified():
+            self.vouton_label.setText("VOUT ON \n " + self.vout_on.text() + " V")
+        elif self.vout_off.isModified():
+            self.voutoff_label.setText("VOUT OFF \n " + self.vout_off.text() + " V")
+        self.toff_max.setModified(False)
+        self.ton_max.setModified(False)
+        self.ton_delay.setModified(False)
+        self.toff_delay.setModified(False)
+        self.ton_rise.setModified(False)
+        self.toff_fall.setModified(False)
+        self.vout_off.setModified(False)
+        self.vout_on.setModified(False)
+
+    def state_changed(self):
+        if self.vout_ov_enable.isChecked():
+            self.vout_ov_warning.setEnabled(True)
+            self.vout_ov_fault.setEnabled(True)
+            self.vout_ov_delay.setEnabled(True)
+        else:
+            self.vout_ov_warning.setEnabled(False)
+            self.vout_ov_fault.setEnabled(False)
+            self.vout_ov_delay.setEnabled(False)
+
+        if self.vout_uv_enable.isChecked():
+            self.vout_uv_warning.setEnabled(True)
+            self.vout_uv_fault.setEnabled(True)
+            self.vout_uv_delay.setEnabled(True)
+        else:
+            self.vout_uv_warning.setEnabled(False)
+            self.vout_uv_fault.setEnabled(False)
+            self.vout_uv_delay.setEnabled(False)
+
+        if self.vin_uv_enable.isChecked():
+            self.vin_uv_warning.setEnabled(True)
+            self.vin_uv_fault.setEnabled(True)
+            self.vin_uv_delay.setEnabled(True)
+        else:
+            self.vin_uv_warning.setEnabled(False)
+            self.vin_uv_fault.setEnabled(False)
+            self.vin_uv_delay.setEnabled(False)
+
+        if self.vin_ov_enable.isChecked():
+            self.vin_ov_warning.setEnabled(True)
+            self.vin_ov_fault.setEnabled(True)
+            self.vin_ov_delay.setEnabled(True)
+        else:
+            self.vin_ov_warning.setEnabled(False)
+            self.vin_ov_fault.setEnabled(False)
+            self.vin_ov_delay.setEnabled(False)
+
+        if self.iout_oc_enable.isChecked():
+            self.iout_oc_warning.setEnabled(True)
+            self.iout_oc_fault.setEnabled(True)
+            self.iout_oc_delay.setEnabled(True)
+        else:
+            self.iout_oc_warning.setEnabled(False)
+            self.iout_oc_fault.setEnabled(False)
+            self.iout_oc_delay.setEnabled(False)
+
+        if self.temp_ot_enable.isChecked():
+            self.temp_ot_warning.setEnabled(True)
+            self.temp_ot_fault.setEnabled(True)
+            self.temp_ot_delay.setEnabled(True)
+        else:
+            self.temp_ot_warning.setEnabled(False)
+            self.temp_ot_fault.setEnabled(False)
+            self.temp_ot_delay.setEnabled(False)
+
     def page1_main(self):
+
         # create page
         self.page = QtGui.QWidget()
         self.page.setObjectName(_fromUtf8("page"))
@@ -131,7 +227,7 @@ class Ui_MainWindow(object):
         self.schematic.setPixmap(pixmap)
         self.schematic.setStyleSheet('border: 1px solid rgb(147, 147, 147)')
 
-        x = PMBus_Comms.PMBus_Comms()
+        x = PMBus_Comms.PMbusComms()
         vout_val = x.vout_query_command(self.device, "iq_3f010221")  # vout_command L16
 
         # voltage group box
@@ -155,15 +251,14 @@ class Ui_MainWindow(object):
         self.create_label(self.voltage_box, 20, 170, 61, 20, "Margin High")
         self.create_label(self.voltage_box, 20, 210, 61, 20, "Margin Low")
 
-        self.stackedWidget.addWidget(self.page)
+        self.stacked_widget.addWidget(self.page)
 
     def page2_configuration(self):
 
         # create page 2
         self.page_2 = QtGui.QWidget()
 
-
-        x = PMBus_Comms.PMBus_Comms()
+        x = PMBus_Comms.PMbusComms()
         ton_delay_val = x.vin_query_command(self.device, "iq_3f010260")
         toff_delay_val = x.vin_query_command(self.device, "iq_3f010264")
         ton_rise_val = x.vin_query_command(self.device, "iq_3f010261")
@@ -172,7 +267,6 @@ class Ui_MainWindow(object):
         toff_max_val = x.vin_query_command(self.device, "iq_3f010266")  # toff_max warn limit L11
         vout_on_val = x.vout_query_command(self.device, "iq_3f010221")  # vout command L16
         vout_off_val = x.vout_query_command(self.device, "iq_3f0102E0")  # mfr_vout_off L16
-
 
         # create configuration group box
         self.configuration_box = QtGui.QGroupBox(self.page_2)
@@ -212,7 +306,6 @@ class Ui_MainWindow(object):
         self.vout_on = self.create_line_edit(self.configuration_box, 600, 330, 41, 21, vout_on_val)
         self.vout_off = self.create_line_edit(self.configuration_box, 600, 360, 41, 21, vout_off_val)
 
-
         self.graph_frame = QtGui.QFrame(self.configuration_box)
         self.graph_frame.setGeometry(QtCore.QRect(20, 20, 631, 251))
 
@@ -241,39 +334,13 @@ class Ui_MainWindow(object):
         self.vouton_label = self.create_label(self.configuration_box, 30, 60, 100, 30,
                                               "VOUT ON \n" + vout_on_val + " V")
 
-        self.stackedWidget.addWidget(self.page_2)
-
-    def handleEditingFinished(self):
-        if self.toff_max.isModified():
-            self.toffmax_label.setText("TOFF_MAX = " + self.toff_max.text())
-        elif self.ton_max.isModified():
-            self.tonmax_label.setText("TON_MAX = " + self.ton_max.text())
-        elif self.ton_delay.isModified():
-            self.tondelay_label.setText(self.ton_delay.text())
-        elif self.toff_delay.isModified():
-            self.toffdelay_label.setText(self.toff_delay.text())
-        elif self.ton_rise.isModified():
-            self.tonrise_label.setText(self.ton_rise.text())
-        elif self.toff_fall.isModified():
-            self.tofffall_label.setText(self.toff_fall.text())
-        elif self.vout_on.isModified():
-            self.vouton_label.setText("VOUT ON \n " + self.vout_on.text() + " V")
-        elif self.vout_off.isModified():
-            self.voutoff_label.setText("VOUT OFF \n " + self.vout_off.text() + " V")
-        self.toff_max.setModified(False)
-        self.ton_max.setModified(False)
-        self.ton_delay.setModified(False)
-        self.toff_delay.setModified(False)
-        self.ton_rise.setModified(False)
-        self.toff_fall.setModified(False)
-        self.vout_off.setModified(False)
-        self.vout_on.setModified(False)
+        self.stacked_widget.addWidget(self.page_2)
 
     def page3_pin(self):
 
         # create page 3 (empty yet)
         self.page_3 = QtGui.QWidget()
-        self.stackedWidget.addWidget(self.page_3)
+        self.stacked_widget.addWidget(self.page_3)
 
     def page4_protection(self):
 
@@ -285,42 +352,25 @@ class Ui_MainWindow(object):
         self.size_and_name(self.protection_box, 19, 9, 671, 401, "PMBus Protection Parameters")
 
         # check boxes
-        self.vout_ov_enable = QtGui.QCheckBox(self.protection_box)
-        self.vout_ov_enable.setGeometry(QtCore.QRect(90, 90, 16, 17))
-        self.vout_uv_enable = QtGui.QCheckBox(self.protection_box)
-        self.vout_uv_enable.setGeometry(QtCore.QRect(90, 140, 16, 17))
-        self.vin_ov_enable = QtGui.QCheckBox(self.protection_box)
-        self.vin_ov_enable.setGeometry(QtCore.QRect(90, 190, 16, 17))
-        self.vin_uv_enable = QtGui.QCheckBox(self.protection_box)
-        self.vin_uv_enable.setGeometry(QtCore.QRect(90, 240, 16, 17))
-        self.temp_ot_enable = QtGui.QCheckBox(self.protection_box)
-        self.temp_ot_enable.setGeometry(QtCore.QRect(90, 340, 16, 17))
-        self.iout_oc_enable = QtGui.QCheckBox(self.protection_box)
-        self.iout_oc_enable.setGeometry(QtCore.QRect(90, 290, 16, 17))
-        self.vout_ov_walert = QtGui.QCheckBox(self.protection_box)
-        self.vout_ov_walert.setGeometry(QtCore.QRect(580, 90, 16, 17))
-        self.vout_uv_walert = QtGui.QCheckBox(self.protection_box)
-        self.vout_uv_walert.setGeometry(QtCore.QRect(580, 140, 16, 17))
-        self.vin_ov_walert = QtGui.QCheckBox(self.protection_box)
-        self.vin_ov_walert.setGeometry(QtCore.QRect(580, 190, 16, 17))
-        self.vin_uv_walert = QtGui.QCheckBox(self.protection_box)
-        self.vin_uv_walert.setGeometry(QtCore.QRect(580, 240, 16, 17))
-        self.iout_oc_walert = QtGui.QCheckBox(self.protection_box)
-        self.iout_oc_walert.setGeometry(QtCore.QRect(580, 290, 16, 17))
-        self.temp_ot_walert = QtGui.QCheckBox(self.protection_box)
-        self.temp_ot_walert.setGeometry(QtCore.QRect(580, 340, 16, 17))
-        self.vout_ov_falert = QtGui.QCheckBox(self.protection_box)
-        self.vout_ov_falert.setGeometry(QtCore.QRect(620, 90, 16, 17))
-        self.vout_uv_falert = QtGui.QCheckBox(self.protection_box)
-        self.vout_uv_falert.setGeometry(QtCore.QRect(620, 140, 16, 17))
-        self.vin_ov_falert = QtGui.QCheckBox(self.protection_box)
-        self.vin_ov_falert.setGeometry(QtCore.QRect(620, 190, 16, 17))
-        self.vin_uv_falert = QtGui.QCheckBox(self.protection_box)
-        self.vin_uv_falert.setGeometry(QtCore.QRect(620, 240, 16, 17))
-        self.iout_oc_falert = QtGui.QCheckBox(self.protection_box)
-        self.iout_oc_falert.setGeometry(QtCore.QRect(620, 290, 16, 17))
-        self.temp_oc_falert = QtGui.QCheckBox(self.protection_box)
-        self.temp_oc_falert.setGeometry(QtCore.QRect(620, 340, 16, 17))
+        self.vout_ov_enable = self.create_checkbox(self.protection_box, 90, 90, 16, 17)
+        self.vout_uv_enable = self.create_checkbox(self.protection_box, 90, 140, 16, 17)
+        self.vin_ov_enable = self.create_checkbox(self.protection_box, 90, 190, 16, 17)
+        self.vin_uv_enable = self.create_checkbox(self.protection_box, 90, 240, 16, 17)
+        self.temp_ot_enable = self.create_checkbox(self.protection_box, 90, 340, 16, 17)
+        self.iout_oc_enable = self.create_checkbox(self.protection_box, 90, 290, 16, 17)
+        self.vout_ov_walert = self.create_checkbox(self.protection_box, 580, 90, 16, 17)
+        self.vout_uv_walert = self.create_checkbox(self.protection_box, 580, 140, 16, 17)
+        self.vin_ov_walert = self.create_checkbox(self.protection_box, 580, 190, 16, 17)
+        self.vin_uv_walert = self.create_checkbox(self.protection_box, 580, 240, 16, 17)
+        self.iout_oc_walert = self.create_checkbox(self.protection_box, 580, 290, 16, 17)
+        self.temp_ot_walert = self.create_checkbox(self.protection_box, 580, 340, 16, 17)
+        self.vout_ov_falert = self.create_checkbox(self.protection_box, 620, 90, 16, 17)
+        self.vout_uv_falert = self.create_checkbox(self.protection_box, 620, 140, 16, 17)
+        self.vin_ov_falert = self.create_checkbox(self.protection_box, 620, 190, 16, 17)
+        self.vin_uv_falert = self.create_checkbox(self.protection_box, 620, 240, 16, 17)
+        self.iout_oc_falert = self.create_checkbox(self.protection_box, 620, 290, 16, 17)
+        self.temp_oc_falert = self.create_checkbox(self.protection_box, 620, 340, 16, 17)
+
 
         # define labels
         self.create_label(self.protection_box, 20, 90, 61, 20, "VOUT OV")
@@ -355,7 +405,7 @@ class Ui_MainWindow(object):
         self.create_label(self.protection_box, 580, 60, 21, 20, "W")
         self.create_label(self.protection_box, 620, 60, 21, 20, "F")
 
-        x = PMBus_Comms.PMBus_Comms()
+        x = PMBus_Comms.PMbusComms()
         vout_ov_war_val = x.vout_query_command(self.device, "iq_3f010242")
         vout_uv_war_val = x.vout_query_command(self.device, "iq_3f010243")
         vin_ov_war_val = x.vin_query_command(self.device, "iq_3f010257")
@@ -393,7 +443,7 @@ class Ui_MainWindow(object):
         self.temp_ot_delay = self.create_line_edit(self.protection_box, 440, 340, 81, 21, "0.00")
 
 
-        self.stackedWidget.addWidget(self.page_4)
+        self.stacked_widget.addWidget(self.page_4)
 
     def page5_monitor(self):
 
@@ -409,7 +459,13 @@ class Ui_MainWindow(object):
         self.clear_faults_but.setGeometry(QtCore.QRect(10, 240, 71, 23))
         self.clear_faults_but.setText("Clear Faults")
 
-        x = PMBus_Comms.PMBus_Comms()
+        # device startup
+        self.device_startup_but = QtGui.QPushButton(self.monitoring_box)
+        self.device_startup_but.setGeometry(QtCore.QRect(10, 280, 71, 23))
+        self.device_startup_but.setText("Control Pin")
+
+
+        x = PMBus_Comms.PMbusComms()
         vin_average = x.vin_query_command(self.device, "iq_3f010288")
         vout_average = x.vout_query_command(self.device, "iq_3f010221")
         iout_average = x.vin_query_command(self.device, "iq_3f01028C")
@@ -421,85 +477,66 @@ class Ui_MainWindow(object):
         self.create_label(self.monitoring_box, 10, 140, 80, 21, "IOUT:  " + iout_average + " A")  # read iout
         self.create_label(self.monitoring_box, 10, 190, 80, 21, "TEMP:  " + temp_average + " C")  # read temp 2
 
-
         # create frames for monitoring graphs
         self.monitoring_frame = QtGui.QFrame(self.monitoring_box)
         self.monitoring_frame.setGeometry(QtCore.QRect(90, 20, 565, 365))
 
-        self.scrolllayout = QtGui.QVBoxLayout()
-        scrollwidget = QtGui.QWidget()
-        scrollwidget.setLayout(self.scrolllayout)
+        self.scroll_layout = QtGui.QVBoxLayout()
+        scroll_widget = QtGui.QWidget()
+        scroll_widget.setLayout(self.scroll_layout)
 
         scroll = QtGui.QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setWidget(scrollwidget)
+        scroll.setWidget(scroll_widget)
 
-        self.matplotlib = Monitoring.Matplotlib_Widget()
-        self.input_vol_thread = Monitoring.New_Thread()
-        self.display_plot(self.matplotlib, "Input voltage (V)", self.input_vol_thread)
-
-        self.matplotlib2 = Monitoring.Matplotlib_Widget()
-        self.output_vol_thread = Monitoring.New_Thread()
-        self.display_plot(self.matplotlib2, "Output voltage (V)", self.output_vol_thread)
-
-        self.matplotlib3 = Monitoring.Matplotlib_Widget()
-        self.output_cur_thread = Monitoring.New_Thread()
-        self.display_plot(self.matplotlib3, "Output current (A)", self.output_cur_thread)
-
-        self.matplotlib4 = Monitoring.Matplotlib_Widget()
-        self.temp_thread = Monitoring.New_Thread()
-        self.display_plot(self.matplotlib4, "Temperature (C)", self.temp_thread)
+        self.display_plot("Input Voltage (V)")
+        self.display_plot("Output Voltage (V)")
+        self.display_plot("Temperature (T)")
 
         layout = QtGui.QHBoxLayout()
         layout.addWidget(scroll)
         self.monitoring_frame.setLayout(layout)
-        self.stackedWidget.addWidget(self.page_5)
+        self.stacked_widget.addWidget(self.page_5)
 
-    def display_plot(self, widget, name, thread):
-        self.samples = 0
-        groupbox = QtGui.QGroupBox(name)
-        grouplayout = QtGui.QHBoxLayout()
+    def display_plot(self, name):
+
+        group_box = QtGui.QGroupBox(name)
+        group_layout = QtGui.QHBoxLayout()
         # add plot diagram to graph_frame
-        widget.axis.clear()
-        grouplayout.addWidget(widget)
-        groupbox.setLayout(grouplayout)
-        self.scrolllayout.addWidget(groupbox)
-        thread.start()
-        thread.new_sample.connect(lambda sample: self.new_thread(sample, widget))
-
-    @QtCore.pyqtSlot(list)
-    def new_thread(self, sample, widget):
-        widget.axis.plot(sample)
-        widget.canvas.draw()
+        graph = Monitoring.GraphCanvas()
+        graph.setMinimumSize(200, 300)
+        group_layout.addWidget(graph)
+        group_box.setLayout(group_layout)
+        self.scroll_layout.addWidget(group_box)
 
     def info_panel(self):
-        self.info_frame = QtGui.QFrame(self.centralwidget)
+        self.info_frame = QtGui.QFrame(self.central_widget)
         self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 511))
 
         self.create_label(self.info_frame, 20, 30, 61, 20, "Device Info:")
 
-        self.textBrowser = QtGui.QTextBrowser(self.info_frame)
-        self.textBrowser.setGeometry(QtCore.QRect(20, 70, 121, 192))
+        self.text_browser = QtGui.QTextBrowser(self.info_frame)
+        self.text_browser.setGeometry(QtCore.QRect(20, 70, 121, 192))
 
-    def setupUi(self, MainWindow):
+    def setupUi(self, main_window):
 
         # set style of the main window
-        self.setstyle(MainWindow)
-        MainWindow.setWindowTitle("PMBus Power GUI")
+        self.setstyle(main_window)
+        main_window.setWindowTitle("PMBus Power GUI")
 
         # create central widget
-        self.centralwidget = QtGui.QWidget(MainWindow)
+        self.central_widget = QtGui.QWidget(main_window)
 
         # set menu buttons
         self.menu()
 
         # create stackedWidget (tabbed)
-        self.stackedWidget = QtGui.QStackedWidget(self.centralwidget)
-        self.stackedWidget.setGeometry(QtCore.QRect(180, 90, 711, 431))
-        self.stackedWidget.setAutoFillBackground(False)
+        self.stacked_widget = QtGui.QStackedWidget(self.central_widget)
+        self.stacked_widget.setGeometry(QtCore.QRect(180, 90, 711, 431))
+        self.stacked_widget.setAutoFillBackground(False)
 
         #  connect with device
-        x = PMBus_Comms.PMBus_Comms()
+        x = PMBus_Comms.PMbusComms()
         self.device = x.process()
 
         # create page1
@@ -521,28 +558,28 @@ class Ui_MainWindow(object):
         self.info_panel()
 
         # menu bar & status bar
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 901, 21))
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtGui.QStatusBar(MainWindow)
-        MainWindow.setStatusBar(self.statusbar)
+        main_window.setCentralWidget(self.central_widget)
+        self.menu_bar = QtGui.QMenuBar(main_window)
+        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 901, 21))
+        main_window.setMenuBar(self.menu_bar)
+        self.statusbar = QtGui.QStatusBar(main_window)
+        main_window.setStatusBar(self.statusbar)
 
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def page1(self):
-        self.stackedWidget.setCurrentIndex(0)
+        self.stacked_widget.setCurrentIndex(0)
 
     def page2(self):
-        self.stackedWidget.setCurrentIndex(1)
+        self.stacked_widget.setCurrentIndex(1)
 
     def page3(self):
-        self.stackedWidget.setCurrentIndex(2)
+        self.stacked_widget.setCurrentIndex(2)
 
     def page4(self):
-        self.stackedWidget.setCurrentIndex(3)
+        self.stacked_widget.setCurrentIndex(3)
 
     def page5(self):
-        self.stackedWidget.setCurrentIndex(4)
+        self.stacked_widget.setCurrentIndex(4)
 
 

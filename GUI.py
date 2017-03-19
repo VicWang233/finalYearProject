@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtCore, QtGui
-import Painter
-import Monitoring
-import PMBus_Comms
+#####################################################################
+#                                                                   #
+#                               Gui.py                              #
+#                     Author: Angelika Kosciolek                    #
+#                             05/03/2017                            #
+#                                                                   #
+#             Description: GUI Application implementation           #
+#                                                                   #
+#####################################################################
 
+from PyQt4 import QtCore, QtGui
+import SequencingPlot
+import Monitoring
+from PMBusCall import pmbus
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -21,73 +30,80 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 
-class GuiMainWindow(object):
+class GuiMainWindow(QtGui.QMainWindow):
 
-    def __init__(self):
+    def __init__(self, parent=None):
+        super(GuiMainWindow, self).__init__(parent)
         self.paint_panel = 0
+        self.index = 1
+        timer = QtCore.QTimer(self)
+        timer.timeout.connect(self.update_label)
+        timer.start(1000)
 
-    def setstyle(self, main_window):
-        main_window.resize(901, 577)
+    def set_style(self, main_window):
+        main_window.resize(1200, 700)
         main_window.setStyleSheet(_fromUtf8("QFrame{\n"
                                            "background-color:rgb(255, 255, 255);\n"
-                                           "border: 1px solid rgb(147, 147, 147)\n"
-                                           "}\n"
-                                           "\n"
+                                           "border: 1px solid rgb(147, 147, 147) } \n"
+
                                            "QLabel{\n"
                                            "border:none;\n"
-                                           "background-color:transparent;\n"
-                                           "}\n"
-                                           "\n"
+                                           "background-color:transparent;}\n"
+
                                            "QToolButton{\n"
                                            "background-color:transparent;\n"
-                                           "border:none;\n"
-                                           "}\n"
-                                           "\n"
+                                           "border:none;}\n"
+
                                            "QToolButton:pressed{\n"
-                                           "background-color:rgb(231, 226, 221);\n"
-                                           "border: 1px solid rgb(147, 147, 147);\n"
-                                           "}\n"
-                                           "\n"
+                                           "background-color:rgb(215, 224, 243);\n"
+                                           "border: 1px solid rgb(147, 147, 147);}\n"
+
                                            "QToolButton:checked{\n"
-                                           "background-color:rgb(231, 226, 221);\n"
-                                           "border: 1px solid rgb(147, 147, 147);\n"
-                                           "}\n"
-                                           "\n"
+                                           "background-color:rgb(101, 135, 205);\n"
+                                           "border: 1px solid rgb(147, 147, 147);}\n"
+
                                            "QToolButton:hover {\n"
-                                           "background-color:rgb(188, 188, 188);\n"
-                                           "}\n"
-                                           "\n"
+                                           "background-color:rgb(215, 224, 243);}\n"
+
+                                           "QGroupBox { background-color:rgb(220, 228, 244); }\n"
+
+                                           "QMainWindow { background-color:rgb(220, 228, 244); }\n"
+
                                            "QStackedWidget {\n"
                                            "background-color:rgb(220, 228, 244);\n"
-                                           "border: 1px solid rgb(147, 147, 147)\n"
-                                           "}"))
+                                           "border: 1px solid rgb(147, 147, 147)}\n" ))
 
     def menu(self):
 
         # create new buttons_frame and put menu buttons in there
         self.buttons_frame = QtGui.QFrame(self.central_widget)
-        self.buttons_frame.setGeometry(QtCore.QRect(180, 10, 711, 71))
+        self.buttons_frame.setGeometry(QtCore.QRect(180, 10, 1010, 71))
         self.buttons_frame.setFrameShape(QtGui.QFrame.StyledPanel)
         self.buttons_frame.setFrameShadow(QtGui.QFrame.Raised)
 
         # "main" button
-        self.create_button_tab(self.buttons_frame, 10, 10, 131, 51, "Main", self.page1)
+        main = self.create_button_tab(10, 10, 190, 51, "Main", self.page1, "main.png")
+        main.setStatusTip('Power Stage')
         # "configuration" button
-        self.create_button_tab(self.buttons_frame, 150, 10, 131, 51, "Configuration", self.page2)
+        conf = self.create_button_tab(210, 10, 190, 51, "Configuration", self.page2, "conf.png")
+        conf.setStatusTip('Startup and shutdown parameters configuration')
         # "pin" button
-        self.create_button_tab(self.buttons_frame, 290, 10, 131, 51, "Pin", self.page3)
+        pin = self.create_button_tab(410, 10, 190, 51, "Pin", self.page3, "pin.png")
+        pin.setStatusTip('Pin layout')
         # "protection" button
-        self.create_button_tab(self.buttons_frame, 430, 10, 131, 51, "Protection", self.page4)
+        prot = self.create_button_tab(610, 10, 190, 51, "Protection", self.page4, "prot.png")
+        prot.setStatusTip("Set device's protection parameters")
         # "monitor" button
-        self.create_button_tab(self.buttons_frame, 570, 10, 131, 51, "Monitoring", self.page5)
+        mon = self.create_button_tab(810, 10, 190, 51, "Monitoring", self.page5, "mon.png")
+        mon.setStatusTip("Device's monitoring")
+
+
 
     def text_validation(self, text_field):
 
-        # !! ReGex implementation !!
         reg_ex = QtCore.QRegExp("[0-9]\.?[0-9]\.?[0-9]+")
         text_validator = QtGui.QRegExpValidator(reg_ex, text_field)
         text_field.setValidator(text_validator)
-        # !! ReGex implementation End !!
 
     def create_label(self, group, x, y, w, h, text):
 
@@ -96,34 +112,37 @@ class GuiMainWindow(object):
         label.setText(text)
         return label
 
-    def create_button_tab(self, frame, x, y, w, h, text, page):
+    def create_button_tab(self, x, y, w, h, text, page, icon):
 
-        button_tab = QtGui.QToolButton(frame)
+        button_tab = QtGui.QToolButton(self.buttons_frame)
         button_tab.setGeometry(QtCore.QRect(x, y, w, h))
         button_tab.setCheckable(True)
         button_tab.setAutoExclusive(True)
         button_tab.clicked.connect(page)
         button_tab.setText(_translate("MainWindow", text, None))
+        button_tab.setIcon(QtGui.QIcon(icon))
+        button_tab.setIconSize(QtCore.QSize(32, 32))
+        button_tab.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon | QtCore.Qt.AlignLeading)
+        return button_tab
 
     def size_and_name(self, component, x, y, w, h, name):
 
         component.setGeometry(QtCore.QRect(x, y, w, h))
         component.setTitle(_translate("MainWindow", name, None))
 
-    def create_line_edit(self, frame, x, y, w, h, text):
+    def create_line_edit(self, text):
 
-        line_edit = QtGui.QLineEdit(frame)
-        line_edit.setGeometry(QtCore.QRect(x, y, w, h))
+        line_edit = QtGui.QLineEdit()
+        #line_edit.setGeometry(QtCore.QRect(x, y, w, h))
         line_edit.setAlignment(QtCore.Qt.AlignRight)
         line_edit.setText(text)
         self.text_validation(line_edit)  # validate user input
         line_edit.textChanged.connect(self.handle_editing_finished)
         return line_edit
 
-    def create_checkbox(self, frame, x, y, w, h):
+    def create_checkbox(self):
 
-        checkbox = QtGui.QCheckBox(frame)
-        checkbox.setGeometry(QtCore.QRect(x, y, w, h))
+        checkbox = QtGui.QCheckBox()
         checkbox.setChecked(True)
         checkbox.stateChanged.connect(self.state_changed)
         return checkbox
@@ -210,46 +229,95 @@ class GuiMainWindow(object):
             self.temp_ot_fault.setEnabled(False)
             self.temp_ot_delay.setEnabled(False)
 
+    def selection_change(self, i):
+
+        if self.cb.currentText() == "OPERATION_CMD":
+            self.control_pin.setEnabled(False)
+            self.operation_cmd.setEnabled(True)
+            self.cb_mon.setEnabled(True)
+            # pmbus.write_command(pmbus.device, " ")  # write operation cmd + 0x40
+        elif self.cb.currentText() == "CTRL_POS":
+            self.control_pin.setEnabled(True)
+            self.operation_cmd.setEnabled(False)
+            self.cb_mon.setEnabled(False)
+            # pmbus.write_command(pmbus.device, " ")  # write ctrl_pos 0x16
+        else:
+            self.control_pin.setEnabled(True)
+            self.operation_cmd.setEnabled(False)
+            self.cb_mon.setEnabled(False)
+            # pmbus.write_command(pmbus.device, " ")  # write ctrl_neg 0x14
+
+        print "Current index", i, "selection changed ", self.cb.currentText()
+
+    def operation_selection_change(self, i):
+
+        print "Current index", i, "selection changed ", self.cb_mon.currentText()
+        #  CMD_OPERATION command
+        if i == 0:
+            pmbus.write_command(pmbus.device, " ")  # 0x00 immediate off w/o sequencing
+        elif i == 1:
+            pmbus.write_command(pmbus.device, " ")  # 0x40 soft off with sequencing
+        elif i == 2:
+            pmbus.write_command(pmbus.device, " ")  # 0x80 on
+        elif i == 3:
+            pmbus.write_command(pmbus.device, " ")  # 0x94 margin low w/o fault
+        elif i == 4:
+            pmbus.write_command(pmbus.device, " ")  # 0x98 margin low with fault
+        elif i == 5:
+            pmbus.write_command(pmbus.device, " ")  # 0xA4 margin high w/o fault
+        elif i == 6:
+            pmbus.write_command(pmbus.device, " ")  # 0xA8 margin high with fault
+
     def page1_main(self):
 
         # create page
         self.page = QtGui.QWidget()
-        self.page.setObjectName(_fromUtf8("page"))
 
         # create group box
         self.power_stage_box = QtGui.QGroupBox(self.page)
-        self.size_and_name(self.power_stage_box, 19, 9, 671, 401, "Power Stage")
+        self.size_and_name(self.power_stage_box, 19, 9, 970, 535, "Power Stage")
 
         # frame for block diagram of EM2130
         self.schematic = QtGui.QLabel(self.power_stage_box)
-        self.schematic.setGeometry(QtCore.QRect(20, 20, 451, 371))
-        pixmap = QtGui.QPixmap('blockdiagram-em2130.jpg')
-        self.schematic.setPixmap(pixmap)
+        self.schematic.setGeometry(QtCore.QRect(20, 20, 695, 409))
+        pix_map = QtGui.QPixmap('blockdiagram-em2130.jpg')
+        self.schematic.setPixmap(pix_map)
         self.schematic.setStyleSheet('border: 1px solid rgb(147, 147, 147)')
 
-        x = PMBus_Comms.PMbusComms()
-        vout_val = x.vout_query_command(self.device, "iq_3f010221")  # vout_command L16
+        # PMBus variables
+        vout_val = pmbus.vout_query_command(pmbus.device, "iq_3f010221")  # vout_command L16
 
         # voltage group box
         self.voltage_box = QtGui.QGroupBox(self.power_stage_box)
-        self.size_and_name(self.voltage_box, 480, 20, 181, 241, "Voltage")
+        self.size_and_name(self.voltage_box, 750, 20, 181, 241, "Voltage")
+
+        grid = QtGui.QGridLayout()
+        grid.setSpacing(10)
+        self.voltage_box.setLayout(grid)
 
         # text fields for voltage group
-        self.create_line_edit(self.voltage_box, 60, 50, 81, 21, "12")
-        self.create_line_edit(self.voltage_box, 60, 90, 81, 21, vout_val)
-        self.create_line_edit(self.voltage_box, 90, 170, 51, 21, "5")
-        self.create_line_edit(self.voltage_box, 90, 210, 51, 21, "5")
+        self.vin_nom = self.create_line_edit("12")
+        self.vout_nom = self.create_line_edit(vout_val)
+        self.marg_high = self.create_line_edit("5")
+        self.marg_low = self.create_line_edit("5")
 
-        # define labels
-        self.create_label(self.voltage_box, 20, 50, 21, 20, "VIN")
-        self.create_label(self.voltage_box, 20, 90, 31, 20, "VOUT")
-        self.create_label(self.voltage_box, 150, 50, 21, 20, "V")
-        self.create_label(self.voltage_box, 150, 90, 21, 20, "V")
-        self.create_label(self.voltage_box, 150, 170, 21, 20, "%")
-        self.create_label(self.voltage_box, 150, 210, 21, 20, "%")
-        self.create_label(self.voltage_box, 60, 20, 61, 20, "Nominal")
-        self.create_label(self.voltage_box, 20, 170, 61, 20, "Margin High")
-        self.create_label(self.voltage_box, 20, 210, 61, 20, "Margin Low")
+        grid.addWidget(QtGui.QLabel("Nominal"), 0, 1)
+        grid.addWidget(QtGui.QLabel("VIN"), 1, 0)
+        grid.addWidget(self.vin_nom, 1, 1)
+        grid.addWidget(QtGui.QLabel("V"), 1, 2)
+        grid.addWidget(QtGui.QLabel("VOUT"), 2, 0)
+        grid.addWidget(self.vout_nom, 2, 1)
+        grid.addWidget(QtGui.QLabel("V"), 2, 2)
+        grid.addWidget(QtGui.QLabel(" "), 3, 0)
+
+        grid.addWidget(QtGui.QLabel("Margin High"), 4, 0)
+        grid.addWidget(self.marg_high, 4, 1)
+        grid.addWidget(QtGui.QLabel("%"), 4, 2)
+        grid.addWidget(QtGui.QLabel("Margin Low"), 5, 0)
+        grid.addWidget(self.marg_low, 5, 1)
+        grid.addWidget(QtGui.QLabel("%"), 5, 2)
+        grid.addWidget(QtGui.QLabel(" "), 6, 0)
+
 
         self.stacked_widget.addWidget(self.page)
 
@@ -258,78 +326,120 @@ class GuiMainWindow(object):
         # create page 2
         self.page_2 = QtGui.QWidget()
 
-        x = PMBus_Comms.PMbusComms()
-        ton_delay_val = x.vin_query_command(self.device, "iq_3f010260")
-        toff_delay_val = x.vin_query_command(self.device, "iq_3f010264")
-        ton_rise_val = x.vin_query_command(self.device, "iq_3f010261")
-        toff_fall_val = x.vin_query_command(self.device, "iq_3f010265")
-        ton_max_val = x.vin_query_command(self.device, "iq_3f010262")  # ton max fault limit L11
-        toff_max_val = x.vin_query_command(self.device, "iq_3f010266")  # toff_max warn limit L11
-        vout_on_val = x.vout_query_command(self.device, "iq_3f010221")  # vout command L16
-        vout_off_val = x.vout_query_command(self.device, "iq_3f0102E0")  # mfr_vout_off L16
+        #  PMBus variables
+        ton_delay_val = pmbus.vin_query_command(pmbus.device, "iq_3f010260")
+        toff_delay_val = pmbus.vin_query_command(pmbus.device, "iq_3f010264")
+        ton_rise_val = pmbus.vin_query_command(pmbus.device, "iq_3f010261")
+        toff_fall_val = pmbus.vin_query_command(pmbus.device, "iq_3f010265")
+        ton_max_val = pmbus.vin_query_command(pmbus.device, "iq_3f010262")  # ton max fault limit L11
+        toff_max_val = pmbus.vin_query_command(pmbus.device, "iq_3f010266")  # toff_max warn limit L11
+        vout_on_val = pmbus.vout_query_command(pmbus.device, "iq_3f010221")  # vout command L16
+        vout_off_val = pmbus.vout_query_command(pmbus.device, "iq_3f0102E0")  # mfr_vout_off L16
 
         # create configuration group box
         self.configuration_box = QtGui.QGroupBox(self.page_2)
-        self.size_and_name(self.configuration_box, 19, 9, 671, 401, "Sequencing")
+        self.size_and_name(self.configuration_box, 19, 9, 970, 350, "Sequencing Diagram")
 
-        # define labels
-        self.create_label(self.configuration_box, 10, 330, 61, 20, "Device Rise:")
-        self.create_label(self.configuration_box, 10, 360, 61, 20, "Device Fall:")
-        self.create_label(self.configuration_box, 90, 290, 31, 20, "Delay")
-        self.create_label(self.configuration_box, 90, 330, 61, 20, "TON_DELAY:")
-        self.create_label(self.configuration_box, 90, 360, 65, 20, "TOFF_DELAY:")
-        self.create_label(self.configuration_box, 250, 330, 61, 20, "TON_RISE:")
-        self.create_label(self.configuration_box, 250, 360, 61, 20, "TOFF_FALL:")
-        self.create_label(self.configuration_box, 410, 330, 51, 20, "TON_MAX:")
-        self.create_label(self.configuration_box, 410, 360, 61, 20, "TOFF_MAX:")
-        self.create_label(self.configuration_box, 210, 330, 21, 20, "ms")
-        self.create_label(self.configuration_box, 210, 360, 21, 20, "ms")
-        self.create_label(self.configuration_box, 370, 330, 21, 20, "ms")
-        self.create_label(self.configuration_box, 370, 360, 21, 20, "ms")
-        self.create_label(self.configuration_box, 530, 330, 21, 20, "ms")
-        self.create_label(self.configuration_box, 530, 360, 21, 20, "ms")
-        self.create_label(self.configuration_box, 570, 330, 21, 20, "ON:")
-        self.create_label(self.configuration_box, 570, 360, 31, 20, "OFF:")
-        self.create_label(self.configuration_box, 650, 330, 21, 20, "V")
-        self.create_label(self.configuration_box, 650, 360, 21, 20, "V")
-        self.create_label(self.configuration_box, 250, 290, 51, 20, "Ramping")
-        self.create_label(self.configuration_box, 410, 290, 61, 20, "Max Timing")
-        self.create_label(self.configuration_box, 570, 290, 31, 20, "VOUT")
+        self.param_box = QtGui.QGroupBox(self.page_2)
+        self.size_and_name(self.param_box, 19, 360, 970, 190, "Parameters")
 
         # set text fields
-        self.ton_delay = self.create_line_edit(self.configuration_box, 160, 330, 41, 21, ton_delay_val)
-        self.toff_delay = self.create_line_edit(self.configuration_box, 160, 360, 41, 21, toff_delay_val)
-        self.ton_rise = self.create_line_edit(self.configuration_box, 320, 330, 41, 21, ton_rise_val)
-        self.toff_fall = self.create_line_edit(self.configuration_box, 320, 360, 41, 21, toff_fall_val)
-        self.ton_max = self.create_line_edit(self.configuration_box, 480, 330, 41, 21, ton_max_val)
-        self.toff_max = self.create_line_edit(self.configuration_box, 480, 360, 41, 21, toff_max_val)
-        self.vout_on = self.create_line_edit(self.configuration_box, 600, 330, 41, 21, vout_on_val)
-        self.vout_off = self.create_line_edit(self.configuration_box, 600, 360, 41, 21, vout_off_val)
+        self.ton_delay = self.create_line_edit(ton_delay_val)
+        self.toff_delay = self.create_line_edit(toff_delay_val)
+        self.ton_rise = self.create_line_edit(ton_rise_val)
+        self.toff_fall = self.create_line_edit(toff_fall_val)
+        self.ton_max = self.create_line_edit(ton_max_val)
+        self.toff_max = self.create_line_edit(toff_max_val)
+        self.vout_on = self.create_line_edit(vout_on_val)
+        self.vout_off = self.create_line_edit(vout_off_val)
+
+        # set combo box
+        self.cb = QtGui.QComboBox()
+        self.cb.addItem("CTRL_POS")
+        self.cb.addItem("CTRL_NEG")
+        self.cb.addItem("OPERATION_CMD")
+        self.cb.currentIndexChanged.connect(self.selection_change)
+
+        grid = QtGui.QGridLayout()
+        grid.setSpacing(20)
+        self.param_box.setLayout(grid)
+
+        # first row
+        grid.addWidget(QtGui.QLabel("Delay"), 0, 2, 0, 1, QtCore.Qt.AlignTop)
+        grid.addWidget(QtGui.QLabel("\t"), 0, 3, 0, 1)
+        grid.addWidget(QtGui.QLabel("\t"), 0, 4, 0, 1)
+        grid.addWidget(QtGui.QLabel("Ramping"), 0, 5, 0, 1, QtCore.Qt.AlignTop)
+        grid.addWidget(QtGui.QLabel("\t"), 0, 6, 0, 1)
+        grid.addWidget(QtGui.QLabel("\t"), 0, 7, 0, 1)
+        grid.addWidget(QtGui.QLabel("Max Timing"), 0, 8, 0, 1, QtCore.Qt.AlignTop)
+        grid.addWidget(QtGui.QLabel("\t"), 0, 9, 0, 1)
+        grid.addWidget(QtGui.QLabel("\t"), 0, 10, 0, 1)
+        grid.addWidget(QtGui.QLabel("VOUT"), 0, 11, 0, 1, QtCore.Qt.AlignTop)
+        grid.setVerticalSpacing(20)
+        grid.addWidget(QtGui.QLabel(" "), 1, 0)
+        grid.addWidget(QtGui.QLabel("Device Rise:"), 1, 1)
+        grid.addWidget(QtGui.QLabel("TON_DELAY:"), 1, 2)
+        grid.addWidget(self.ton_delay, 1, 3)
+        grid.addWidget(QtGui.QLabel("ms"), 1, 4)
+        grid.addWidget(QtGui.QLabel("TON_RISE:"), 1, 5)
+        grid.addWidget(self.ton_rise, 1, 6)
+        grid.addWidget(QtGui.QLabel("ms"), 1, 7)
+        grid.addWidget(QtGui.QLabel("TON_MAX:"), 1, 8)
+        grid.addWidget(self.ton_max, 1, 9)
+        grid.addWidget(QtGui.QLabel("ms"), 1, 10)
+        grid.addWidget(QtGui.QLabel("ON:"), 1, 11)
+        grid.addWidget(self.vout_on, 1, 12)
+        grid.addWidget(QtGui.QLabel("V"), 1, 13)
+        grid.addWidget(QtGui.QLabel(" "), 1, 14)
+
+        # second row
+        grid.addWidget(QtGui.QLabel(" "), 2, 0)
+        grid.addWidget(QtGui.QLabel("Device Fall:"), 2, 1)
+        grid.addWidget(QtGui.QLabel("TOFF_DELAY:"), 2, 2)
+        grid.addWidget(self.toff_delay, 2, 3)
+        grid.addWidget(QtGui.QLabel("ms"), 2, 4)
+        grid.addWidget(QtGui.QLabel("TOFF_FALL:"), 2, 5)
+        grid.addWidget(self.toff_fall, 2, 6)
+        grid.addWidget(QtGui.QLabel("ms"), 2, 7)
+        grid.addWidget(QtGui.QLabel("TOFF_MAX:"), 2, 8)
+        grid.addWidget(self.toff_max, 2, 9)
+        grid.addWidget(QtGui.QLabel("ms"), 2, 10)
+        grid.addWidget(QtGui.QLabel("OFF:"), 2, 11)
+        grid.addWidget(self.vout_off, 2, 12)
+        grid.addWidget(QtGui.QLabel("V"), 2, 13)
+        grid.addWidget(QtGui.QLabel(" "), 2, 14)
+
+        # third row
+        grid.addWidget(QtGui.QLabel(" "), 3, 0)
+        grid.addWidget(QtGui.QLabel("Device Startup:"), 3, 1)
+        grid.addWidget(self.cb, 3, 2, 1, 2)
+        grid.addWidget(QtGui.QLabel(" "), 4, 0)
+
 
         self.graph_frame = QtGui.QFrame(self.configuration_box)
-        self.graph_frame.setGeometry(QtCore.QRect(20, 20, 631, 251))
+        self.graph_frame.setGeometry(QtCore.QRect(20, 20, 930, 315))
 
         self.main_layout = QtGui.QGridLayout()
         self.graph_frame.setLayout(self.main_layout)
 
         # add plot diagram to graph_frame
-        self.paint_panel = Painter.Graph()
+        self.paint_panel = SequencingPlot.Graph()
         self.paint_panel.close()
         self.main_layout.addWidget(self.paint_panel, 0, 0)
 
         #  add labels to graph
-        self.create_label(self.configuration_box, 95, 231, 65, 20, "TON_DELAY")
-        self.create_label(self.configuration_box, 374, 231, 65, 20, "TOFF_DELAY")
-        self.create_label(self.configuration_box, 172, 231, 65, 20, "TON_RISE")
-        self.create_label(self.configuration_box, 450, 231, 65, 20, "TOFF_FALL")
-        self.create_label(self.configuration_box, 600, 220, 65, 20, "Time")
-        self.tonmax_label = self.create_label(self.configuration_box, 180, 250, 100, 20, "TON_MAX = " + ton_max_val)
-        self.toffmax_label = self.create_label(self.configuration_box, 465, 250, 100, 20, "TOFF_MAX = " + toff_max_val)
-        self.tondelay_label = self.create_label(self.configuration_box, 115, 200, 65, 20, ton_delay_val)
-        self.tonrise_label = self.create_label(self.configuration_box, 189, 200, 65, 20, ton_rise_val)
-        self.toffdelay_label = self.create_label(self.configuration_box, 397, 200, 65, 20, toff_delay_val)
-        self.tofffall_label = self.create_label(self.configuration_box, 465, 200, 65, 20, toff_fall_val)
-        self.voutoff_label = self.create_label(self.configuration_box, 30, 180, 100, 30,
+        self.create_label(self.configuration_box, 115, 275, 65, 20, "TON_DELAY")
+        self.create_label(self.configuration_box, 560, 275, 65, 20, "TOFF_DELAY")
+        self.create_label(self.configuration_box, 235, 275, 65, 20, "TON_RISE")
+        self.create_label(self.configuration_box, 675, 275, 65, 20, "TOFF_FALL")
+        self.create_label(self.configuration_box, 840, 260, 65, 20, "Time")
+        self.tonmax_label = self.create_label(self.configuration_box, 255, 295, 100, 20, "TON_MAX = " + ton_max_val)
+        self.toffmax_label = self.create_label(self.configuration_box, 720, 295, 100, 20, "TOFF_MAX = " + toff_max_val)
+        self.tondelay_label = self.create_label(self.configuration_box, 165, 235, 65, 20, ton_delay_val)
+        self.tonrise_label = self.create_label(self.configuration_box, 277, 235, 65, 20, ton_rise_val)
+        self.toffdelay_label = self.create_label(self.configuration_box, 613, 235, 65, 20, toff_delay_val)
+        self.tofffall_label = self.create_label(self.configuration_box, 725, 235, 65, 20, toff_fall_val)
+        self.voutoff_label = self.create_label(self.configuration_box, 30, 200, 100, 30,
                                                "VOUT OFF \n" + vout_off_val + " V")
         self.vouton_label = self.create_label(self.configuration_box, 30, 60, 100, 30,
                                               "VOUT ON \n" + vout_on_val + " V")
@@ -349,100 +459,165 @@ class GuiMainWindow(object):
 
         # create protection group box
         self.protection_box = QtGui.QGroupBox(self.page_4)
-        self.size_and_name(self.protection_box, 19, 9, 671, 401, "PMBus Protection Parameters")
+        self.size_and_name(self.protection_box, 19, 9, 970, 535, "PMBus Protection Parameters")
 
         # check boxes
-        self.vout_ov_enable = self.create_checkbox(self.protection_box, 90, 90, 16, 17)
-        self.vout_uv_enable = self.create_checkbox(self.protection_box, 90, 140, 16, 17)
-        self.vin_ov_enable = self.create_checkbox(self.protection_box, 90, 190, 16, 17)
-        self.vin_uv_enable = self.create_checkbox(self.protection_box, 90, 240, 16, 17)
-        self.temp_ot_enable = self.create_checkbox(self.protection_box, 90, 340, 16, 17)
-        self.iout_oc_enable = self.create_checkbox(self.protection_box, 90, 290, 16, 17)
-        self.vout_ov_walert = self.create_checkbox(self.protection_box, 580, 90, 16, 17)
-        self.vout_uv_walert = self.create_checkbox(self.protection_box, 580, 140, 16, 17)
-        self.vin_ov_walert = self.create_checkbox(self.protection_box, 580, 190, 16, 17)
-        self.vin_uv_walert = self.create_checkbox(self.protection_box, 580, 240, 16, 17)
-        self.iout_oc_walert = self.create_checkbox(self.protection_box, 580, 290, 16, 17)
-        self.temp_ot_walert = self.create_checkbox(self.protection_box, 580, 340, 16, 17)
-        self.vout_ov_falert = self.create_checkbox(self.protection_box, 620, 90, 16, 17)
-        self.vout_uv_falert = self.create_checkbox(self.protection_box, 620, 140, 16, 17)
-        self.vin_ov_falert = self.create_checkbox(self.protection_box, 620, 190, 16, 17)
-        self.vin_uv_falert = self.create_checkbox(self.protection_box, 620, 240, 16, 17)
-        self.iout_oc_falert = self.create_checkbox(self.protection_box, 620, 290, 16, 17)
-        self.temp_oc_falert = self.create_checkbox(self.protection_box, 620, 340, 16, 17)
+        self.vout_ov_enable = self.create_checkbox()
+        self.vout_uv_enable = self.create_checkbox()
+        self.vin_ov_enable = self.create_checkbox()
+        self.vin_uv_enable = self.create_checkbox()
+        self.temp_ot_enable = self.create_checkbox()
+        self.iout_oc_enable = self.create_checkbox()
+        self.vout_ov_walert = self.create_checkbox()
+        self.vout_uv_walert = self.create_checkbox()
+        self.vin_ov_walert = self.create_checkbox()
+        self.vin_uv_walert = self.create_checkbox()
+        self.iout_oc_walert = self.create_checkbox()
+        self.temp_ot_walert = self.create_checkbox()
+        self.vout_ov_falert = self.create_checkbox()
+        self.vout_uv_falert = self.create_checkbox()
+        self.vin_ov_falert = self.create_checkbox()
+        self.vin_uv_falert = self.create_checkbox()
+        self.iout_oc_falert = self.create_checkbox()
+        self.temp_ot_falert = self.create_checkbox()
 
-
-        # define labels
-        self.create_label(self.protection_box, 20, 90, 61, 20, "VOUT OV")
-        self.create_label(self.protection_box, 20, 190, 46, 13, "VIN OV")
-        self.create_label(self.protection_box, 170, 30, 71, 16, "Warning Limit")
-        self.create_label(self.protection_box, 20, 290, 46, 13, "IOUT")
-        self.create_label(self.protection_box, 80, 30, 41, 16, "Enable")
-        self.create_label(self.protection_box, 20, 340, 46, 13, "TEMP")
-        self.create_label(self.protection_box, 310, 30, 51, 16, "Fault Limit")
-        self.create_label(self.protection_box, 450, 30, 61, 16, "Time Delay")
-        self.create_label(self.protection_box, 250, 90, 21, 20, "V")
-        self.create_label(self.protection_box, 250, 140, 21, 20, "V")
-        self.create_label(self.protection_box, 250, 190, 21, 20, "V")
-        self.create_label(self.protection_box, 250, 240, 21, 20, "V")
-        self.create_label(self.protection_box, 390, 90, 21, 20, "V")
-        self.create_label(self.protection_box, 390, 140, 21, 20, "V")
-        self.create_label(self.protection_box, 390, 190, 21, 20, "V")
-        self.create_label(self.protection_box, 390, 240, 21, 20, "V")
-        self.create_label(self.protection_box, 530, 90, 21, 20, "ms")
-        self.create_label(self.protection_box, 530, 140, 21, 20, "ms")
-        self.create_label(self.protection_box, 530, 190, 21, 20, "ms")
-        self.create_label(self.protection_box, 530, 240, 21, 20, "ms")
-        self.create_label(self.protection_box, 590, 30, 31, 16, "Alert")
-        self.create_label(self.protection_box, 20, 140, 51, 16, "VOUT UV")
-        self.create_label(self.protection_box, 20, 240, 46, 13, "VIN UV")
-        self.create_label(self.protection_box, 250, 340, 21, 20, "C")
-        self.create_label(self.protection_box, 250, 290, 21, 20, "A")
-        self.create_label(self.protection_box, 530, 290, 21, 20, "ms")
-        self.create_label(self.protection_box, 530, 340, 21, 20, "ms")
-        self.create_label(self.protection_box, 390, 340, 21, 20, "C")
-        self.create_label(self.protection_box, 390, 290, 21, 20, "A")
-        self.create_label(self.protection_box, 580, 60, 21, 20, "W")
-        self.create_label(self.protection_box, 620, 60, 21, 20, "F")
-
-        x = PMBus_Comms.PMbusComms()
-        vout_ov_war_val = x.vout_query_command(self.device, "iq_3f010242")
-        vout_uv_war_val = x.vout_query_command(self.device, "iq_3f010243")
-        vin_ov_war_val = x.vin_query_command(self.device, "iq_3f010257")
-        vin_uv_war_val = x.vin_query_command(self.device, "iq_3f010258")
-        vout_ov_fal_val = x.vout_query_command(self.device, "iq_3f010240")
-        vout_uv_fal_val = x.vout_query_command(self.device, "iq_3f010244")
-        vin_ov_fal_val = x.vin_query_command(self.device, "iq_3f010255")
-        vin_uv_fal_val = x.vin_query_command(self.device, "iq_3f010259")
-        iout_oc_war_val = x.vin_query_command(self.device, "iq_3f01024A")
-        temp_ot_war_val = x.vin_query_command(self.device, "iq_3f010251")
-        temp_ot_fal_val = x.vin_query_command(self.device, "iq_3f01024F")
-        iout_oc_fal_val = x.vin_query_command(self.device, "iq_3f010246")
+        #  PMBus variables
+        vout_ov_war_val = pmbus.vout_query_command(pmbus.device, "iq_3f010242")
+        vout_uv_war_val = pmbus.vout_query_command(pmbus.device, "iq_3f010243")
+        vin_ov_war_val = pmbus.vin_query_command(pmbus.device, "iq_3f010257")
+        vin_uv_war_val = pmbus.vin_query_command(pmbus.device, "iq_3f010258")
+        vout_ov_fal_val = pmbus.vout_query_command(pmbus.device, "iq_3f010240")
+        vout_uv_fal_val = pmbus.vout_query_command(pmbus.device, "iq_3f010244")
+        vin_ov_fal_val = pmbus.vin_query_command(pmbus.device, "iq_3f010255")
+        vin_uv_fal_val = pmbus.vin_query_command(pmbus.device, "iq_3f010259")
+        iout_oc_war_val = pmbus.vin_query_command(pmbus.device, "iq_3f01024A")
+        temp_ot_war_val = pmbus.vin_query_command(pmbus.device, "iq_3f010251")
+        temp_ot_fal_val = pmbus.vin_query_command(pmbus.device, "iq_3f01024F")
+        iout_oc_fal_val = pmbus.vin_query_command(pmbus.device, "iq_3f010246")
 
         # text fields
-        self.vout_ov_warning = self.create_line_edit(self.protection_box, 160, 90, 81, 21, vout_ov_war_val)
-        self.vout_uv_warning = self.create_line_edit(self.protection_box, 160, 140, 81, 21, vout_uv_war_val)
-        self.vin_ov_warning = self.create_line_edit(self.protection_box, 160, 190, 81, 21, vin_ov_war_val)
-        self.vin_uv_warning = self.create_line_edit(self.protection_box, 160, 240, 81, 21, vin_uv_war_val)
-        self.iout_oc_warning = self.create_line_edit(self.protection_box, 160, 290, 81, 21, iout_oc_war_val)
-        self.temp_ot_warning = self.create_line_edit(self.protection_box, 160, 340, 81, 21, temp_ot_war_val)
+        self.vout_ov_warning = self.create_line_edit(vout_ov_war_val)
+        self.vout_uv_warning = self.create_line_edit(vout_uv_war_val)
+        self.vin_ov_warning = self.create_line_edit(vin_ov_war_val)
+        self.vin_uv_warning = self.create_line_edit(vin_uv_war_val)
+        self.iout_oc_warning = self.create_line_edit(iout_oc_war_val)
+        self.temp_ot_warning = self.create_line_edit(temp_ot_war_val)
 
-        self.vout_ov_fault = self.create_line_edit(self.protection_box, 300, 90, 81, 21, vout_ov_fal_val)
-        self.vout_uv_fault = self.create_line_edit(self.protection_box, 300, 140, 81, 21, vout_uv_fal_val)
-        self.vin_ov_fault = self.create_line_edit(self.protection_box, 300, 190, 81, 21, vin_ov_fal_val)
-        self.vin_uv_fault = self.create_line_edit(self.protection_box, 300, 240, 81, 21, vin_uv_fal_val)
-        self.temp_ot_fault = self.create_line_edit(self.protection_box, 300, 340, 81, 21, temp_ot_fal_val)
-        self.iout_oc_fault = self.create_line_edit(self.protection_box, 300, 290, 81, 21, iout_oc_fal_val)
+        self.vout_ov_fault = self.create_line_edit(vout_ov_fal_val)
+        self.vout_uv_fault = self.create_line_edit(vout_uv_fal_val)
+        self.vin_ov_fault = self.create_line_edit(vin_ov_fal_val)
+        self.vin_uv_fault = self.create_line_edit(vin_uv_fal_val)
+        self.temp_ot_fault = self.create_line_edit(temp_ot_fal_val)
+        self.iout_oc_fault = self.create_line_edit(iout_oc_fal_val)
 
-        self.vout_ov_delay = self.create_line_edit(self.protection_box, 440, 90, 81, 21, "0.00")
-        self.vout_uv_delay = self.create_line_edit(self.protection_box, 440, 90, 81, 21, "0.00")
-        self.vout_uv_delay = self.create_line_edit(self.protection_box, 440, 140, 81, 21, "0.00")
-        self.vin_ov_delay = self.create_line_edit(self.protection_box, 440, 190, 81, 21, "0.00")
-        self.iout_oc_delay = self.create_line_edit(self.protection_box, 440, 290, 81, 21, "0.00")
-        self.vin_uv_delay = self.create_line_edit(self.protection_box, 440, 240, 81, 21, "0.00")
-        self.temp_ot_delay = self.create_line_edit(self.protection_box, 440, 340, 81, 21, "0.00")
+        self.vout_ov_delay = self.create_line_edit("0.00")
+        self.vout_uv_delay = self.create_line_edit("0.00")
+        self.vout_uv_delay = self.create_line_edit("0.00")
+        self.vin_ov_delay = self.create_line_edit("0.00")
+        self.iout_oc_delay = self.create_line_edit("0.00")
+        self.vin_uv_delay = self.create_line_edit("0.00")
+        self.temp_ot_delay = self.create_line_edit("0.00")
+
+        grid = QtGui.QGridLayout()
+
+        grid.setSpacing(20)
+        grid.addWidget(QtGui.QLabel(" "), 0, 1)
+        # First row
+        grid.addWidget(QtGui.QLabel("Enable"), 1, 2)
+        grid.addWidget(QtGui.QLabel("Warning Limit"), 1, 3)
+        grid.addWidget(QtGui.QLabel("\t"), 1, 4)
+        grid.addWidget(QtGui.QLabel("Fault Limit"), 1, 5)
+        grid.addWidget(QtGui.QLabel("\t"), 1, 6)
+        grid.addWidget(QtGui.QLabel("Time Delay"), 1, 7)
+        grid.addWidget(QtGui.QLabel("\t"), 1, 8)
+        grid.addWidget(QtGui.QLabel("Alert (W/F)"), 1, 9)
 
 
+        # Second row
+        #grid.addWidget(QtGui.QLabel("W          F"), 1, 9)
+        grid.setVerticalSpacing(40)
+        grid.setRowMinimumHeight(5, 5)
+
+        # Third row
+        grid.addWidget(QtGui.QLabel("VOUT OV"), 2, 1)
+        grid.addWidget(self.vout_ov_enable, 2, 2)
+        grid.addWidget(self.vout_ov_warning, 2, 3)
+        grid.addWidget(QtGui.QLabel("V"), 2, 4)
+        grid.addWidget(self.vout_ov_fault, 2, 5)
+        grid.addWidget(QtGui.QLabel("V"), 2, 6)
+        grid.addWidget(self.vout_ov_delay, 2, 7)
+        grid.addWidget(QtGui.QLabel("ms"), 2, 8)
+        grid.addWidget(self.vout_ov_walert, 2, 9)
+        grid.addWidget(self.vout_ov_falert, 2, 10)
+        grid.addWidget(QtGui.QLabel("  "), 2, 11)
+
+        # Fourth row
+        grid.addWidget(QtGui.QLabel("VOUT UV"), 3, 1)
+        grid.addWidget(self.vout_uv_enable, 3, 2)
+        grid.addWidget(self.vout_uv_warning, 3, 3)
+        grid.addWidget(QtGui.QLabel("V"), 3, 4)
+        grid.addWidget(self.vout_uv_fault, 3, 5)
+        grid.addWidget(QtGui.QLabel("V"), 3, 6)
+        grid.addWidget(self.vout_uv_delay, 3, 7)
+        grid.addWidget(QtGui.QLabel("ms"), 3, 8)
+        grid.addWidget(self.vout_uv_walert, 3, 9)
+        grid.addWidget(self.vout_uv_falert, 3, 10)
+        grid.addWidget(QtGui.QLabel(" "), 3, 11)
+
+        # Fifth row
+        grid.addWidget(QtGui.QLabel("VIN OV"), 4, 1)
+        grid.addWidget(self.vin_ov_enable, 4, 2)
+        grid.addWidget(self.vin_ov_warning, 4, 3)
+        grid.addWidget(QtGui.QLabel("V"), 4, 4)
+        grid.addWidget(self.vin_ov_fault, 4, 5)
+        grid.addWidget(QtGui.QLabel("V"), 4, 6)
+        grid.addWidget(self.vin_ov_delay, 4, 7)
+        grid.addWidget(QtGui.QLabel("ms"), 4, 8)
+        grid.addWidget(self.vin_ov_walert, 4, 9)
+        grid.addWidget(self.vin_ov_falert, 4, 10)
+        grid.addWidget(QtGui.QLabel(" "), 4, 11)
+
+        # Sixth row
+        grid.addWidget(QtGui.QLabel("VIN UV"), 5, 1)
+        grid.addWidget(self.vin_uv_enable, 5, 2)
+        grid.addWidget(self.vin_uv_warning, 5, 3)
+        grid.addWidget(QtGui.QLabel("V"), 5, 4)
+        grid.addWidget(self.vin_uv_fault, 5, 5)
+        grid.addWidget(QtGui.QLabel("V"), 5, 6)
+        grid.addWidget(self.vin_uv_delay, 5, 7)
+        grid.addWidget(QtGui.QLabel("ms"), 5, 8)
+        grid.addWidget(self.vin_uv_walert, 5, 9)
+        grid.addWidget(self.vin_uv_falert, 5, 10)
+        grid.addWidget(QtGui.QLabel(" "), 5, 11)
+
+        # Seventh row
+        grid.addWidget(QtGui.QLabel("IOUT"), 6, 1)
+        grid.addWidget(self.iout_oc_enable, 6, 2)
+        grid.addWidget(self.iout_oc_warning, 6, 3)
+        grid.addWidget(QtGui.QLabel("V"), 6, 4)
+        grid.addWidget(self.iout_oc_fault, 6, 5)
+        grid.addWidget(QtGui.QLabel("V"), 6, 6)
+        grid.addWidget(self.iout_oc_delay, 6, 7)
+        grid.addWidget(QtGui.QLabel("ms"), 6, 8)
+        grid.addWidget(self.iout_oc_walert, 6, 9)
+        grid.addWidget(self.iout_oc_falert, 6, 10)
+        grid.addWidget(QtGui.QLabel(" "), 6, 11)
+
+        # Eight row
+        grid.addWidget(QtGui.QLabel("TEMP"), 7, 1)
+        grid.addWidget(self.temp_ot_enable, 7, 2)
+        grid.addWidget(self.temp_ot_warning, 7, 3)
+        grid.addWidget(QtGui.QLabel("V"), 7, 4)
+        grid.addWidget(self.temp_ot_fault, 7, 5)
+        grid.addWidget(QtGui.QLabel("V"), 7, 6)
+        grid.addWidget(self.temp_ot_delay, 7, 7)
+        grid.addWidget(QtGui.QLabel("ms"), 7, 8)
+        grid.addWidget(self.temp_ot_walert, 7, 9)
+        grid.addWidget(self.temp_ot_falert, 7, 10)
+        grid.addWidget(QtGui.QLabel(" "), 7, 11)
+        grid.addWidget(QtGui.QLabel(" "), 8, 0)
+
+        self.protection_box.setLayout(grid)
         self.stacked_widget.addWidget(self.page_4)
 
     def page5_monitor(self):
@@ -452,34 +627,59 @@ class GuiMainWindow(object):
 
         # create monitoring box
         self.monitoring_box = QtGui.QGroupBox(self.page_5)
-        self.size_and_name(self.monitoring_box, 19, 9, 671, 401, "PMBus Status Information")
+        self.size_and_name(self.monitoring_box, 19, 9, 970, 535, "PMBus Status Information")
 
         # clear faults button
         self.clear_faults_but = QtGui.QPushButton(self.monitoring_box)
-        self.clear_faults_but.setGeometry(QtCore.QRect(10, 240, 71, 23))
+        self.clear_faults_but.setGeometry(QtCore.QRect(20, 240, 100, 23))
         self.clear_faults_but.setText("Clear Faults")
 
         # device startup
-        self.device_startup_but = QtGui.QPushButton(self.monitoring_box)
-        self.device_startup_but.setGeometry(QtCore.QRect(10, 280, 71, 23))
-        self.device_startup_but.setText("Control Pin")
+        self.control_pin = QtGui.QPushButton(self.monitoring_box)
+        self.control_pin.setGeometry(QtCore.QRect(20, 280, 100, 23))
+        self.control_pin.setText("Control Pin")
+        self.control_pin.clicked.connect(self.handle_control_pin)
 
+        # device startup - OPERATION command
+        self.operation_cmd = QtGui.QPushButton(self.monitoring_box)
+        self.operation_cmd.setGeometry(QtCore.QRect(20, 320, 100, 23))
+        self.operation_cmd.setText("OPERATION_CMD")
+        self.operation_cmd.setEnabled(False)
+        #self.operation_cmd.clicked.connect(self.handle_operation_cmd)
 
-        x = PMBus_Comms.PMbusComms()
-        vin_average = x.vin_query_command(self.device, "iq_3f010288")
-        vout_average = x.vout_query_command(self.device, "iq_3f010221")
-        iout_average = x.vin_query_command(self.device, "iq_3f01028C")
-        temp_average = x.vin_query_command(self.device, "iq_3f01028E")
+        self.cb_mon = QtGui.QComboBox(self.monitoring_box)
+        self.cb_mon.setGeometry(QtCore.QRect(20, 360, 170, 23))
+        self.cb_mon.addItem("Immediate off w/o sequencing")
+        self.cb_mon.addItem("Soft off with sequencing")
+        self.cb_mon.addItem("On")
+        self.cb_mon.addItem("Margin Low w/o fault")
+        self.cb_mon.addItem("Margin Low with fault")
+        self.cb_mon.addItem("Margin High w/o fault")
+        self.cb_mon.addItem("Margin High w/o fault")
+        self.cb_mon.setEnabled(False)
+        self.cb_mon.currentIndexChanged.connect(self.operation_selection_change)
+
+        # monitoring on/off
+        self.monitoring_but = QtGui.QPushButton(self.monitoring_box)
+        self.monitoring_but.setGeometry(QtCore.QRect(20, 400, 100, 23))
+        self.monitoring_but.setText("Monitoring")
+
+        # write volatile button
+        self.write_volatile = QtGui.QPushButton(self.monitoring_box)
+        self.write_volatile.setGeometry(QtCore.QRect(20, 440, 100, 23))
+        self.write_volatile.setText("Write volatile")
+        self.write_volatile.setStyleSheet("background-color: yellow")
+
 
         # define labels
-        self.create_label(self.monitoring_box, 10, 40, 80, 21, "VIN:  " + vin_average + " V")  # read vin
-        self.create_label(self.monitoring_box, 10, 90, 80, 21, "VOUT:  " + vout_average + " V")  # vout command
-        self.create_label(self.monitoring_box, 10, 140, 80, 21, "IOUT:  " + iout_average + " A")  # read iout
-        self.create_label(self.monitoring_box, 10, 190, 80, 21, "TEMP:  " + temp_average + " C")  # read temp 2
+        self.vin_average_label = self.create_label(self.monitoring_box, 20, 40, 80, 21, "VIN:  0 V")  # read vin
+        self.vout_average_label = self.create_label(self.monitoring_box, 20, 90, 80, 21, "VOUT:  0 V")  # read vout
+        self.iout_average_label = self.create_label(self.monitoring_box, 20, 140, 80, 21, "IOUT:  0 A")  # read iout
+        self.temp_average_label = self.create_label(self.monitoring_box, 20, 190, 80, 21, "TEMP:  0 C")  # read temp 2
 
         # create frames for monitoring graphs
         self.monitoring_frame = QtGui.QFrame(self.monitoring_box)
-        self.monitoring_frame.setGeometry(QtCore.QRect(90, 20, 565, 365))
+        self.monitoring_frame.setGeometry(QtCore.QRect(200, 20, 755, 500))
 
         self.scroll_layout = QtGui.QVBoxLayout()
         scroll_widget = QtGui.QWidget()
@@ -489,39 +689,63 @@ class GuiMainWindow(object):
         scroll.setWidgetResizable(True)
         scroll.setWidget(scroll_widget)
 
-        self.display_plot("Input Voltage (V)")
-        self.display_plot("Output Voltage (V)")
-        self.display_plot("Temperature (T)")
+        plots = ["vin", "vout", "temp"]
+        names = ["Input Voltage (V)", "Output Voltage (V)", "Temperature (C)"]
+        for plot, name in zip(plots, names):
+            self.display_plot(name, plot)
+            self.do_pause()
 
         layout = QtGui.QHBoxLayout()
         layout.addWidget(scroll)
         self.monitoring_frame.setLayout(layout)
         self.stacked_widget.addWidget(self.page_5)
 
-    def display_plot(self, name):
+    def update_label(self):
+        vin_average = pmbus.vin_query_command(pmbus.device, "iq_3f010288")
+        self.vin_average_label.setText("VIN:  " + vin_average + " V")
+        vout_average = pmbus.vout_query_command(pmbus.device, "iq_3f01028B")
+        self.vout_average_label.setText("VOUT:  " + vout_average + " V")
+        iout_average = pmbus.vin_query_command(pmbus.device, "iq_3f01028C")
+        self.iout_average_label.setText("IOUT:  " + iout_average + " A")
+        temp_average = pmbus.vin_query_command(pmbus.device, "iq_3f01028E")
+        self.temp_average_label.setText("TEMP:  " + temp_average + " C")
 
+    def do_pause(self):
+        self.monitoring_but.clicked.connect(self.graph.stop_timer)
+
+
+    def handle_control_pin(self):
+        pmbus.write_command(pmbus.device, "iw_3f0020216")  # set ON_OFF_CONFIG to 0x16 for Control Pin
+        if self.index:
+            pmbus.write_command(pmbus.device, "ip_1")
+        else:
+            pmbus.write_command(pmbus.device, "ip_0")
+        self.index = not self.index
+
+    def display_plot(self, name, value):
         group_box = QtGui.QGroupBox(name)
         group_layout = QtGui.QHBoxLayout()
         # add plot diagram to graph_frame
-        graph = Monitoring.GraphCanvas()
-        graph.setMinimumSize(200, 300)
-        group_layout.addWidget(graph)
+        self.graph = Monitoring.GraphCanvas(value)
+        #graph.init_figure(value)
+        #graph.init_timer(value)
+        self.graph.setMinimumSize(200, 400)
+        group_layout.addWidget(self.graph)
         group_box.setLayout(group_layout)
         self.scroll_layout.addWidget(group_box)
 
     def info_panel(self):
+
         self.info_frame = QtGui.QFrame(self.central_widget)
-        self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 511))
-
+        self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 645))
         self.create_label(self.info_frame, 20, 30, 61, 20, "Device Info:")
-
         self.text_browser = QtGui.QTextBrowser(self.info_frame)
         self.text_browser.setGeometry(QtCore.QRect(20, 70, 121, 192))
 
     def setupUi(self, main_window):
 
         # set style of the main window
-        self.setstyle(main_window)
+        self.set_style(main_window)
         main_window.setWindowTitle("PMBus Power GUI")
 
         # create central widget
@@ -532,12 +756,8 @@ class GuiMainWindow(object):
 
         # create stackedWidget (tabbed)
         self.stacked_widget = QtGui.QStackedWidget(self.central_widget)
-        self.stacked_widget.setGeometry(QtCore.QRect(180, 90, 711, 431))
+        self.stacked_widget.setGeometry(QtCore.QRect(180, 90, 1010, 565))
         self.stacked_widget.setAutoFillBackground(False)
-
-        #  connect with device
-        x = PMBus_Comms.PMbusComms()
-        self.device = x.process()
 
         # create page1
         self.page1_main()
@@ -557,13 +777,20 @@ class GuiMainWindow(object):
         # device info - left panel
         self.info_panel()
 
+        exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(QtGui.qApp.quit)
+
         # menu bar & status bar
         main_window.setCentralWidget(self.central_widget)
         self.menu_bar = QtGui.QMenuBar(main_window)
+        self.menu_bar.addMenu('&File')
+        self.menu_bar.addAction(exitAction)
         self.menu_bar.setGeometry(QtCore.QRect(0, 0, 901, 21))
         main_window.setMenuBar(self.menu_bar)
-        self.statusbar = QtGui.QStatusBar(main_window)
-        main_window.setStatusBar(self.statusbar)
+        self.status_bar = QtGui.QStatusBar(main_window)
+        main_window.setStatusBar(self.status_bar)
 
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
@@ -581,5 +808,3 @@ class GuiMainWindow(object):
 
     def page5(self):
         self.stacked_widget.setCurrentIndex(4)
-
-

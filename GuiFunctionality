@@ -1,0 +1,874 @@
+#####################################################################
+#                                                                   #
+#                         GuiFunctionality.py                       #
+#                     Author: Angelika Kosciolek                    #
+#                             05/03/2017                            #
+#                                                                   #
+#             Description: GUI Application implementation           #
+#                                                                   #
+#####################################################################
+
+from PyQt4 import QtCore, QtGui
+import LinearConversions
+import Monitoring
+from PMBusCall import pmbus
+import Gui
+import functools
+import string
+
+
+class GuiFunctionality(Gui.GuiMainWindow):
+
+    def __init__(self, *args, **kwargs):
+
+        Gui.GuiMainWindow.__init__(self, *args, **kwargs)
+
+        # paint panel for device's sequencing diagram
+        self.paint_panel = 0
+
+        # flag used for monitoring turn on/off option
+        self.index = 1
+
+        # check if device is turned on
+        self.device_on = 0
+
+        # flags to check if WRITE TO DEVICE button can be enabled
+        self.write_ok = 0
+        self.write_ok_ov = 0
+        self.write_ok_uv = 0
+        self.write_ok_temp = 0
+
+        # timer for real time values displaying on monitoring tab (1s interval)
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.update_monitoring_labels)
+        self.timer.start(1000)
+
+        # reference for LinearConversions class
+        self.linear_conv = LinearConversions.LinearConversions()
+
+        # by default protection parameters are enabled
+        self.is_vout_ov_enabled = 1
+        self.is_vout_uv_enabled = 1
+        self.is_vin_ov_enabled = 1
+        self.is_vin_uv_enabled = 1
+        self.is_iout_enabled = 1
+        self.is_temp_enabled = 1
+
+        # variables to calculate values for protection RESPONSE commands
+        # delay
+        self.num_delay_a = 0
+        self.num_delay_b = 0
+        self.num_delay_c = 0
+        self.num_delay_d = 0
+        self.num_delay_e = 0
+        self.num_delay_f = 0
+
+        # number of retries
+        self.num_retries_a = 0
+        self.num_retries_b = 0
+        self.num_retries_c = 0
+        self.num_retries_d = 0
+        self.num_retries_e = 0
+        self.num_retries_f = 0
+
+        # type of response
+        self.num_resp_a = 0
+        self.num_resp_b = 0
+        self.num_resp_c = 0
+        self.num_resp_d = 0
+        self.num_resp_e = 0
+        self.num_resp_f = 0
+
+    def text_validation(self, text_field):
+
+        reg_ex = QtCore.QRegExp("^\d+(\.\d{1,2})?$")
+        text_validator = QtGui.QRegExpValidator(reg_ex, text_field)
+        text_field.setValidator(text_validator)
+
+    def text_validation_hex(self, text_field):
+
+        reg_ex = QtCore.QRegExp("^0x[0-9A-Fa-f]+$")
+        text_validator = QtGui.QRegExpValidator(reg_ex, text_field)
+        text_field.setValidator(text_validator)
+
+    def create_label(self, group, x, y, w, h, text):
+
+        label = QtGui.QLabel(group)
+        label.setGeometry(QtCore.QRect(x, y, w, h))
+        label.setText(text)
+        return label
+
+    def create_button_tab(self, x, y, w, h, text, page, icon):
+
+        button_tab = QtGui.QToolButton(self.buttons_frame)
+        button_tab.setGeometry(QtCore.QRect(x, y, w, h))
+        button_tab.setCheckable(True)
+        button_tab.setAutoExclusive(True)
+        button_tab.clicked.connect(page)
+        button_tab.setText(text)
+        button_tab.setIcon(QtGui.QIcon(icon))
+        button_tab.setIconSize(QtCore.QSize(32, 32))
+        button_tab.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon | QtCore.Qt.AlignLeading)
+        return button_tab
+
+    def size_and_name(self, component, x, y, w, h, name):
+
+        component.setGeometry(QtCore.QRect(x, y, w, h))
+        component.setTitle(name)
+
+    def create_line_edit(self, text):
+
+        line_edit = QtGui.QLineEdit()
+        line_edit.setAlignment(QtCore.Qt.AlignRight)
+        line_edit.setText(text)
+        self.text_validation(line_edit)  # validate user input
+        arg = functools.partial(self.handle_editing_finished, line_edit)
+        line_edit.textChanged.connect(arg)
+        return line_edit
+
+    def create_hex_line_edit(self, text):
+
+        line_edit = QtGui.QLineEdit()
+        line_edit.setAlignment(QtCore.Qt.AlignRight)
+        line_edit.setText(text)
+        self.text_validation_hex(line_edit)  # validate user input
+        arg = functools.partial(self.handle_hex_lineedit, line_edit)
+        line_edit.textChanged.connect(arg)
+        return line_edit
+
+    def create_checkbox(self):
+
+        checkbox = QtGui.QCheckBox()
+        checkbox.setChecked(True)
+        checkbox.stateChanged.connect(self.state_changed)
+        return checkbox
+
+    def handle_hex_lineedit(self, line_edit):
+
+        widget = line_edit
+        if widget.text().isEmpty():
+            widget.setText("0x0000")
+
+        if self.encoded_hex_l11.text().isEmpty():
+            self.encoded_hex_l11.setText("0x0000")
+            self.rwv_l11.setText("0")
+
+        if self.encoded_hex_l16.text().isEmpty():
+            self.encoded_hex_l16.setText("0x0000")
+            self.rwv_l16.setText("0")
+
+        if self.encoded_hex_l11.isModified() and not self.encoded_hex_l11.text().isEmpty():
+            value = self.encoded_hex_l11.text()
+            if value == "0x":
+                self.rwv_l11.setText("0")
+            else:
+                self.rwv_l11.setText(str(self.linear_conv.l11_to_float(int(str(value), 16))))
+
+        if self.encoded_hex_l16.isModified() and not self.encoded_hex_l16.text().isEmpty():
+            value = self.encoded_hex_l16.text()
+            if value == "0x":
+                self.rwv_l16.setText("0")
+            else:
+                self.rwv_l16.setText(str(self.linear_conv.l16_to_float(int(str(value), 16))))
+
+    def check_range(self):
+
+        warnings_ov = [self.vout_ov_warning, self.vin_ov_warning,
+                    self.iout_oc_warning, self.temp_ot_warning]
+
+        warnings_uv = [self.vout_uv_warning, self.vin_uv_warning]
+
+        faults_ov = [self.vout_ov_fault, self.vin_ov_fault,
+                  self.iout_oc_fault, self.temp_ot_fault]
+
+        faults_uv = [self.vout_uv_fault, self.vin_uv_fault]
+
+        prot_parameters_ov = ["VOUT OV", "VIN OV", "IOUT OC", "TEMP OT"]
+        prot_parameters_uv = ["VOUT UV", "VIN UV"]
+
+        widgets = [self.ton_delay, self.toff_delay, self.ton_rise, self.toff_fall,
+                   self.ton_max, self.toff_max, self.vout_on, self.vout_off,
+                   self.power_on, self.power_off, self.vin_on, self.vin_off,
+                   self.marg_high, self.marg_low]
+        ranges = [5000.0, 5000.0, 5000.0, 5000.0, 5000.0, 5000.0, 5.250, 5.250, 5.25, 5.25, 20.0, 20.0, 50.0, 50.0]
+        params = ["TON_DELAY", "TOFF_DELAY", "TON_RISE", "TOFF_FALL", "TON_MAX", "TOFF_MAX", "VOUT ON", "VOUT OFF",
+                  "POWER ON", "POWER OFF", "VIN ON", "VIN OFF", "margin high", "margin low"]
+        # check if parameters are out of range
+        for widget, r, param in zip(widgets, ranges, params):
+            if float(widget.text()) > r:
+                self.write_ok = 0
+                widget.setStyleSheet("color: rgb(255, 51, 51);")
+                widget.setToolTip("Value out of range (valid range 0 - " + str(r) + " )")
+            elif float(widget.text()) <= r:
+                self.write_ok = 1
+                widget.setStyleSheet("color: rgb(0, 0, 0);")
+                widget.setToolTip("Enter here " + param)
+
+        # check ov protection parameters if warning threshold is less than fault threshold
+        for fault, warning, param in zip(faults_ov, warnings_ov, prot_parameters_ov):
+            if float(warning.text()) >= float(fault.text()):
+                # disable writing to the device
+                self.write_ok_ov = 0
+                warning.setStyleSheet("color: rgb(255, 153, 51);")
+                warning.setToolTip(param + " Warning threshold should be "
+                                   "less than " + param + " Fault threshold")
+                fault.setStyleSheet("color: rgb(255, 153, 51);")
+                fault.setToolTip(param + " Warning threshold should be "
+                                 "less than " + param + " Fault threshold")
+            elif float(warning.text()) < float(fault.text()):
+                if param == "TEMP OT":
+                    if float(warning.text()) > 175:
+                        self.write_ok_temp = 0
+                        warning.setStyleSheet("color: rgb(255, 51, 51);")
+                        warning.setToolTip("Value out of range (valid range 0 - 175)")
+                    if float(fault.text()) > 175:
+                        self.write_ok_temp = 0
+                        fault.setStyleSheet("color: rgb(255, 51, 51);")
+                        fault.setToolTip("Value out of range (valid range 0 - 175)")
+                    else:
+                        self.write_ok_temp = 1
+                        warning.setStyleSheet("color: rgb(0, 0, 0);")
+                        warning.setToolTip("Enter here " + param + " warning threshold")
+                        fault.setStyleSheet("color: rgb(0, 0, 0);")
+                        fault.setToolTip("Enter here " + param + " fault threshold")
+                else:
+                    self.write_ok_ov = 1
+                    warning.setStyleSheet("color: rgb(0, 0, 0);")
+                    warning.setToolTip("Enter here " + param + " warning threshold")
+                    fault.setStyleSheet("color: rgb(0, 0, 0);")
+                    fault.setToolTip("Enter here " + param + " fault threshold")
+
+        # check uv protection parameters if warning threshold is more than fault threshold
+        for fault, warning, param in zip(faults_uv, warnings_uv, prot_parameters_uv):
+            if float(warning.text()) <= float(fault.text()):
+                self.write_ok_uv = 0
+                warning.setStyleSheet("color: rgb(255, 153, 51);")
+                warning.setToolTip(param + " Warning threshold should be "
+                                   "more than " + param + " Fault threshold")
+                fault.setStyleSheet("color: rgb(255, 153, 51);")
+                fault.setToolTip(param + " Warning threshold should be "
+                                 "more than " + param + " Fault threshold")
+            else:
+                self.write_ok_uv = 1
+                warning.setStyleSheet("color: rgb(0, 0, 0);")
+                warning.setToolTip("Enter here " + param + " warning threshold")
+                fault.setStyleSheet("color: rgb(0, 0, 0);")
+                fault.setToolTip("Enter here " + param + " fault threshold")
+
+    def handle_editing_finished(self, line_edit):
+
+        if self.toff_max.isModified():
+            self.toffmax_label.setText("TOFF_MAX = " + self.toff_max.text())
+        elif self.ton_max.isModified():
+            self.tonmax_label.setText("TON_MAX = " + self.ton_max.text())
+        elif self.ton_delay.isModified():
+            self.tondelay_label.setText(self.ton_delay.text())
+        elif self.toff_delay.isModified():
+            self.toffdelay_label.setText(self.toff_delay.text())
+        elif self.ton_rise.isModified():
+            self.tonrise_label.setText(self.ton_rise.text())
+        elif self.toff_fall.isModified():
+            self.tofffall_label.setText(self.toff_fall.text())
+        elif self.vout_on.isModified():
+            self.vouton_label.setText("VOUT ON \n " + self.vout_on.text() + " V")
+        elif self.vout_off.isModified():
+            self.voutoff_label.setText("VOUT OFF \n " + self.vout_off.text() + " V")
+
+        self.toff_max.setModified(False)
+        self.ton_max.setModified(False)
+        self.ton_delay.setModified(False)
+        self.toff_delay.setModified(False)
+        self.ton_rise.setModified(False)
+        self.toff_fall.setModified(False)
+        self.vout_off.setModified(False)
+        self.vout_on.setModified(False)
+
+        if self.rwv_l11.isModified() and not self.rwv_l11.text().isEmpty():
+            value = self.rwv_l11.text()
+            self.encoded_hex_l11.setText(self.linear_conv.float_to_l11(float(value)))
+
+        if self.rwv_l16.isModified() and not self.rwv_l16.text().isEmpty():
+            value = self.rwv_l16.text()
+            self.encoded_hex_l16.setText(self.linear_conv.float_to_l16(float(value)))
+
+        if self.rwv_l11.text().isEmpty():
+            self.rwv_l11.setText("0")
+            self.encoded_hex_l11.setText("0x0000")
+
+        if self.rwv_l16.text().isEmpty():
+            self.encoded_hex_l16.setText("0x0000")
+            self.rwv_l16.setText("0")
+
+        widget = line_edit
+        if widget.text().isEmpty():
+            widget.setText("0")
+
+    def state_changed(self):
+
+        widgets = [self.vout_ov_warning, self.vout_ov_fault, self.vout_ov_delay,
+                   self.vout_ov_retry, self.vout_ov_resp, self.vout_uv_warning,
+                   self.vout_uv_fault, self.vout_uv_delay, self.vout_uv_retry,
+                   self.vout_uv_resp, self.vin_ov_warning, self.vin_ov_fault,
+                   self.vin_ov_delay, self.vin_ov_retry, self.vin_ov_resp,
+                   self.vin_uv_warning, self.vin_uv_fault, self.vin_uv_delay,
+                   self.vin_uv_retry, self.vin_uv_resp, self.iout_oc_warning,
+                   self.iout_oc_fault, self.iout_oc_delay, self.iout_oc_retry,
+                   self.iout_oc_resp, self.temp_ot_warning, self.temp_ot_fault,
+                   self.temp_ot_delay, self.temp_ot_retry, self.temp_ot_resp]
+
+        if self.vout_ov_enable.isChecked():
+            self.is_vout_ov_enabled = 1
+            for i in range(5):
+                widgets[i].setEnabled(True)
+        else:
+            self.is_vout_ov_enabled = 0
+            for i in range(5):
+                widgets[i].setEnabled(False)
+
+        if self.vout_uv_enable.isChecked():
+            self.is_vout_uv_enabled = 1
+            for i in range(5, 10):
+                widgets[i].setEnabled(True)
+        else:
+            self.is_vout_uv_enabled = 0
+            for i in range(5, 10):
+                widgets[i].setEnabled(False)
+
+        if self.vin_ov_enable.isChecked():
+            self.is_vin_ov_enabled = 1
+            for i in range(10, 15):
+                widgets[i].setEnabled(True)
+        else:
+            for i in range(10, 15):
+                self.is_vin_ov_enabled = 0
+                widgets[i].setEnabled(False)
+
+        if self.vin_uv_enable.isChecked():
+            self.is_vin_uv_enabled = 1
+            for i in range(15, 20):
+                widgets[i].setEnabled(True)
+        else:
+            self.is_vin_uv_enabled = 0
+            for i in range(15, 20):
+                widgets[i].setEnabled(False)
+
+        if self.iout_oc_enable.isChecked():
+            self.is_iout_enabled = 1
+            for i in range(20, 25):
+                widgets[i].setEnabled(True)
+        else:
+            self.is_iout_enabled = 0
+            for i in range(20, 25):
+                widgets[i].setEnabled(False)
+
+        if self.temp_ot_enable.isChecked():
+            self.is_temp_enabled = 1
+            for i in range(25, 30):
+                widgets[i].setEnabled(True)
+        else:
+            self.is_temp_enabled = 0
+            for i in range(25, 30):
+                widgets[i].setEnabled(False)
+
+    def selection_change(self, i):
+
+        if self.cb.currentText() == "OPERATION_CMD":
+            self.control_pin.setEnabled(False)
+            self.operation_cmd.setEnabled(True)
+            self.cb_mon.setEnabled(True)
+            pmbus.configure_command(pmbus.device, "iw_3f0020218")  # write operation cmd 0x18
+        elif self.cb.currentText() == "CTRL_POS":
+            self.control_pin.setEnabled(True)
+            self.operation_cmd.setEnabled(False)
+            self.cb_mon.setEnabled(False)
+            pmbus.configure_command(pmbus.device, "iw_3f0020216")  # write ctrl_pos 0x16
+        else:
+            self.control_pin.setEnabled(True)
+            self.operation_cmd.setEnabled(False)
+            self.cb_mon.setEnabled(False)
+            pmbus.configure_command(pmbus.device, "iw_3f0020214")  # write ctrl_neg 0x14
+
+        print "Current index", i, "selection changed ", self.cb.currentText()
+
+    def selection_pmbus_commands(self):
+        # set code
+        key = str(self.pmbus_cb.currentText())  # make sure it's a string
+        value = self.dict.get(key)
+        code_val = '0x' + hex(value[0])[2:].zfill(2)
+        self.code.setText(code_val)
+
+        # set size
+        size_val = value[1]
+        self.size.setText(str(size_val))
+
+        # set read button
+        cmd_hex = code_val[2:]
+        arg1 = functools.partial(self.handle_rd_direct, cmd_hex, size_val)
+        if pmbus.device == None:
+            self.read_direct.setEnabled(False)
+        elif code_val is not self.write_only:
+            self.read_direct.setEnabled(True)
+            self.read_direct.clicked.connect(arg1)
+        else:
+            self.read_direct.setEnabled(False)
+
+        # set write button
+        arg2 = functools.partial(self.handle_wr_direct, cmd_hex)
+        if pmbus.device == None:
+            self.write_direct.setEnabled(False)
+        elif code_val is not self.read_only:
+            self.write_direct.setEnabled(True)
+            self.write_direct.clicked.connect(arg2)
+        else:
+            self.write_direct.setEnabled(False)
+
+    def handle_rd_direct(self, arg, size):
+        if size > 2:
+            size += 1
+        response = pmbus.configure_command(pmbus.device, "iq_3f010" + str(size) + str(arg))
+        a = response[-4:]
+        b = response[1:3]
+        a = a.rstrip()
+        b = b.rstrip()
+        hex_value = "0x" + a + b
+        decimal_value = int(hex_value, 16)
+        self.read_dec.setText(str(decimal_value))
+        self.read_hex.setText(hex_value)
+
+        response_l11 = pmbus.l11_query_command(pmbus.device, "iq_3f010" + str(size) + str(arg))
+        response_l16 = pmbus.l16_query_command(pmbus.device, "iq_3f010" + str(size) + str(arg))
+        self.read_l11.setText(response_l11)
+        self.read_l16.setText(response_l16)
+
+    def handle_wr_direct(self, arg):
+        pmbus.write_direct(pmbus.device, "iw_3f003" + arg, self.write_hex.text())
+
+    def mon_on_off(self):
+        if self.index:
+            self.pix_map = QtGui.QPixmap('icons/red.jpg')
+            self.led.setPixmap(self.pix_map)
+            self.timer.stop()
+        else:
+            self.pix_map = QtGui.QPixmap('icons/green.jpg')
+            self.led.setPixmap(self.pix_map)
+            self.timer.start(1000)
+        self.index = not self.index
+
+    def write_to_device(self):
+
+        #  WRITE NEW CONFIGURATION TO THE DEVICE
+        #  GET INFO FROM ALL TEXT FIELDS
+        #
+
+        # convert margin high and margin low values fom percentages back to floats
+        marg_low_val = float(self.vout_nom.text()) - (float(self.vout_nom.text()) * (float(self.marg_low.text()) / 100))
+        marg_high_val = float(self.vout_nom.text()) + (float(self.vout_nom.text()) * (float(self.marg_high.text()) / 100))
+
+        values_l11 = [self.ton_delay.text(), self.ton_rise.text(), self.ton_max.text(),
+                      self.toff_delay.text(), self.toff_fall.text(), self.toff_max.text(),
+                      self.iout_oc_fault.text(), self.iout_oc_warning.text(), self.temp_ot_fault.text(),
+                      self.temp_ot_warning.text(), self.vin_ov_fault.text(), self.vin_ov_warning.text(),
+                      self.vin_uv_warning.text(), self.vin_uv_fault.text(), self.vin_on.text(),
+                      self.vin_off.text()]
+
+        values_l16 = [self.vout_nom.text(), self.marg_high.text(), self.marg_low.text(),
+                      self.vout_ov_fault.text(), self.vout_ov_warning.text(), self.vout_uv_warning.text(),
+                      self.vout_uv_fault.text(), self.power_on.text(), self.power_off.text(),
+                      str(marg_high_val), str(marg_low_val)]
+
+        pmbus_l11_hex_codes = ["60", "61", "62", "64", "65", "66", "66", "46", "4A",
+                               "4F", "51", "55", "57", "58", "59", "35", "36"]
+        pmbus_l16_hex_codes = ["21", "25", "26", "40", "42", "43", "44", "5E", "5F", "25", "26"]
+
+        vout_ov_fault_response = bin(self.num_resp_a)[2:].zfill(2)
+        vout_ov_fault_retries = bin(self.num_retries_a)[2:].zfill(3)
+        vout_ov_fault_delay = bin(self.num_delay_a)[2:].zfill(3)
+        vout_ov_to_send = self.bin_to_hex(vout_ov_fault_response + vout_ov_fault_retries + vout_ov_fault_delay)
+
+        vout_uv_fault_response = bin(self.num_resp_b)[2:].zfill(2)
+        vout_uv_fault_retries = bin(self.num_retries_b)[2:].zfill(3)
+        vout_uv_fault_delay = bin(self.num_delay_b)[2:].zfill(3)
+        vout_uv_to_send = self.bin_to_hex(vout_uv_fault_response + vout_uv_fault_retries + vout_uv_fault_delay)
+
+        vin_ov_fault_response = bin(self.num_resp_c)[2:].zfill(2)
+        vin_ov_fault_retries = bin(self.num_retries_c)[2:].zfill(3)
+        vin_ov_fault_delay = bin(self.num_delay_c)[2:].zfill(3)
+        vin_ov_to_send = self.bin_to_hex(vin_ov_fault_response + vin_ov_fault_retries + vin_ov_fault_delay)
+
+        vin_uv_fault_response = bin(self.num_resp_d)[2:].zfill(2)
+        vin_uv_fault_retries = bin(self.num_retries_d)[2:].zfill(3)
+        vin_uv_fault_delay = bin(self.num_delay_d)[2:].zfill(3)
+        vin_uv_to_send = self.bin_to_hex(vin_uv_fault_response + vin_uv_fault_retries + vin_uv_fault_delay)
+
+        iout_oc_fault_response = bin(self.num_resp_e)[2:].zfill(2)
+        iout_oc_fault_retries = bin(self.num_retries_e)[2:].zfill(3)
+        iout_oc_fault_delay = bin(self.num_delay_e)[2:].zfill(3)
+        iout_oc_to_send = self.bin_to_hex(iout_oc_fault_response + iout_oc_fault_retries + iout_oc_fault_delay)
+
+        temp_ot_fault_response = bin(self.num_resp_f)[2:].zfill(2)
+        temp_ot_fault_retries = bin(self.num_retries_f)[2:].zfill(3)
+        temp_ot_fault_delay = bin(self.num_delay_f)[2:].zfill(3)
+        temp_ot_to_send = self.bin_to_hex(temp_ot_fault_response + temp_ot_fault_retries + temp_ot_fault_delay)
+
+        protection_responses = [vout_ov_to_send, vout_uv_to_send, vin_ov_to_send, vin_uv_to_send,
+                                iout_oc_to_send, temp_ot_to_send]
+        response_pmbus_codes = ["41", "45", "56", "5A", "47", "50"]
+
+        # write to the device only if all parameters are entered correctly
+        if self.write_ok and self.write_ok_ov and self.write_ok_uv and self.write_ok_temp:
+            for value, code in zip(protection_responses, response_pmbus_codes):
+                pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+
+            for value, code in zip(values_l11, pmbus_l11_hex_codes):
+                pmbus.l11_write_command(pmbus.device, "iw_3f003" + code, float(value))
+
+            for value, code in zip(values_l16, pmbus_l16_hex_codes):
+                pmbus.l16_write_command(pmbus.device, "iw_3f003" + code, float(value))
+
+    def bin_to_hex(self, s):
+        
+        return ''.join(["%x" % string.atoi(b, 2) for b in s.split()])
+
+    def popup(self, message, val, sign):
+
+        values = ["VIN", "VOUT", "TEMP", "IOUT"]
+
+        msg_box = QtGui.QMessageBox()
+
+        for value in values:
+            if val == value:
+                if message == "warning":
+                    if sign == "+":
+                        msg_box.setIconPixmap(QtGui.QPixmap('icons/warning.png'))
+                        msg_box.setWindowTitle("Warning")
+                        msg_box.setText("Warning! " + val + " value is over " + val + "_OV_WARNING threshold!")
+                    elif sign == "-":
+                        msg_box.setIconPixmap(QtGui.QPixmap('icons/warning.png'))
+                        msg_box.setWindowTitle("Warning")
+                        msg_box.setText("Warning! " + val + " value is under " + val + "_UV_WARNING threshold!")
+                    else:
+                        msg_box.setIconPixmap(QtGui.QPixmap('icons/warning.png'))
+                        msg_box.setWindowTitle("Warning")
+                        if value == "IOUT":
+                            msg_box.setText("Warning! " + val + " value is over " + val + "_OC_WARNING threshold!")
+                        elif value == "TEMP":
+                            msg_box.setText("Warning! " + val + " value is over " + val + "_OT_WARNING threshold!")
+                elif message == "fault":
+                    if sign == "+":
+                        msg_box.setIconPixmap(QtGui.QPixmap('icons/fault.png'))
+                        msg_box.setWindowTitle("Fault")
+                        msg_box.setText("Fault! " + val + " value is over " + val + "_OV_FAULT threshold!")
+                    elif sign == "-":
+                        msg_box.setIconPixmap(QtGui.QPixmap('icons/fault.png'))
+                        msg_box.setWindowTitle("Fault")
+                        msg_box.setText("Fault! " + val + " value is under " + val + "_UV_FAULT threshold!")
+                    else:
+                        msg_box.setIconPixmap(QtGui.QPixmap('icons/fault.png'))
+                        msg_box.setWindowTitle("Fault")
+                        if value == "IOUT":
+                            msg_box.setText("Fault! " + val + " value is over " + val + "_OC_FAULT threshold!")
+                        elif value == "TEMP":
+                            msg_box.setText("Fault! " + val + " value is over " + val + "_OT_FAULT threshold!")
+        msg_box.exec_()
+
+    def update_monitoring_labels(self):
+
+        vin_average = pmbus.l11_query_command(pmbus.device, "iq_3f010288")
+        self.vin_average_label.setText("VIN:  " + vin_average + " V")
+        if self.is_vin_ov_enabled:
+            if self.device_on:
+                if float(vin_average) > float(self.vin_ov_warning.text()):
+                    self.popup("warning", "VIN", "+")
+                if float(vin_average) > float(self.vin_ov_fault.text()):
+                    self.popup("fault", "VIN", "+")
+        if self.is_vin_uv_enabled:
+            if self.device_on:
+                if float(vin_average) < float(self.vin_uv_warning.text()):
+                    self.popup("warning", "VIN", "-")
+                if float(vin_average) < float(self.vin_uv_fault.text()):
+                    self.popup("fault", "VIN", "-")
+
+        vout_average = pmbus.l16_query_command(pmbus.device, "iq_3f01028B")
+        self.vout_average_label.setText("VOUT:  " + vout_average + " V")
+        if self.is_vout_ov_enabled:
+            if self.device_on:
+                if float(vout_average) > float(self.vout_ov_warning.text()):
+                    self.popup("warning", "VOUT", "+")
+                if float(vout_average) > float(self.vout_ov_fault.text()):
+                    self.popup("fault", "VOUT", "+")
+        if self.is_vout_uv_enabled:
+            if self.device_on:
+                if float(vout_average) < float(self.vout_uv_warning.text()):
+                    self.popup("warning", "VOUT", "-")
+                if float(vout_average) < float(self.vout_uv_fault.text()):
+                    self.popup("fault", "VOUT", "-")
+
+        iout_average = pmbus.l11_query_command(pmbus.device, "iq_3f01028C")
+        self.iout_average_label.setText("IOUT:  " + iout_average + " A")
+        if self.is_iout_enabled:
+            if self.device_on:
+                if float(iout_average) > float(self.iout_oc_warning.text()):
+                    self.popup("warning", "IOUT", "")
+                if float(iout_average) > float(self.iout_oc_fault.text()):
+                    self.popup("fault", "IOUT", "")
+
+        temp_average = pmbus.l11_query_command(pmbus.device, "iq_3f01028E")
+        self.temp_average_label.setText("TEMP:  " + temp_average + " " + u"\u00b0" + "C")
+        if self.is_temp_enabled:
+            if self.device_on:
+                if float(temp_average) > float(self.temp_ot_warning.text()):
+                    self.popup("warning", "TEMP", "")
+                if float(temp_average) > float(self.temp_ot_fault.text()):
+                    self.popup("fault", "TEMP", "")
+
+    def do_pause(self):
+
+        self.monitoring_but.clicked.connect(self.graph.stop_timer)
+
+    def handle_control_pin(self):
+
+        pmbus.configure_command(pmbus.device, "iw_3f0020216")  # set ON_OFF_CONFIG to 0x16 for Control Pin
+        if self.index_pin:
+            self.device_on = 1
+            pmbus.configure_command(pmbus.device, "ip_1")
+        else:
+            self.device_on = 0
+            pmbus.configure_command(pmbus.device, "ip_0")
+        self.index_pin = not self.index_pin
+
+    def handle_clear_faults(self):
+
+        pmbus.configure_command(pmbus.device, "iw_3f00103")  # set CLEAR FAULTS command
+
+    def handle_operation_cmd(self):
+
+        if self.index_oper_cmd:
+            pmbus.configure_command(pmbus.device, "iw_3f0020180")  # turn device on
+        else:
+            if self.cb_mon.currentText() == "Immediate off w/o sequencing":
+                pmbus.configure_command(pmbus.device, "iw_3f0020100")  # 0x00 immediate off w/o sequencing
+            elif self.cb_mon.currentText() == "Soft off with sequencing":
+                pmbus.configure_command(pmbus.device, "iw_3f0020140")  # 0x40 soft off with sequencing
+            elif self.cb_mon.currentText() == "On":
+                pmbus.configure_command(pmbus.device, "iw_3f0020180")  # 0x80 on
+            elif self.cb_mon.currentText() == "Margin Low w/o fault":
+                pmbus.configure_command(pmbus.device, "iw_3f0020194")  # 0x94 margin low w/o fault
+            elif self.cb_mon.currentText() == "Margin Low with fault":
+                pmbus.configure_command(pmbus.device, "iw_3f0020198")  # 0x98 margin low with fault
+            elif self.cb_mon.currentText() == "Margin High w/o fault":
+                pmbus.configure_command(pmbus.device, "iw_3f00201A4")  # 0xA4 margin high w/o fault
+            elif self.cb_mon.currentText() == "Margin High with fault":
+                pmbus.configure_command(pmbus.device, "iw_3f00201A8")  # 0xA8 margin high with fault
+        self.index_oper_cmd = not self.index_oper_cmd
+
+    def handle_retries(self, widget, i):
+
+        if widget == self.vout_ov_retry:
+            self.num_retries_a = i
+        if widget == self.vout_uv_retry:
+            self.num_retries_b = i
+        if widget == self.vin_ov_retry:
+            self.num_retries_c = i
+        if widget == self.vin_uv_retry:
+            self.num_retries_d = i
+        if widget == self.iout_oc_retry:
+            self.num_retries_e = i
+        if widget == self.temp_ot_retry:
+            self.num_retries_f = i
+
+    def handle_responses(self, widget, i):
+
+        if widget == self.vout_ov_resp:
+            self.num_resp_a = i
+            # PMBus device continues; delay = 0, retry = 0
+            if i == 0:
+                self.vout_ov_delay.setEnabled(False)
+                self.vout_ov_delay.setCurrentIndex(0)
+                self.vout_ov_retry.setEnabled(False)
+                self.vout_ov_retry.setCurrentIndex(0)
+                self.num_retries_a = 0
+                self.num_delay_a = 0
+            # Delay + retries
+            if i == 1:
+                self.vout_ov_delay.setEnabled(True)
+                self.vout_ov_retry.setEnabled(True)
+            # Retries only; delay = 0
+            if i == 2:
+                self.vout_ov_delay.setEnabled(False)
+                self.vout_ov_delay.setCurrentIndex(0)
+                self.vout_ov_retry.setEnabled(True)
+                self.num_delay_a = 0
+            # Device shuts down immediately; retry = 0, delay = 0
+            if i == 3:
+                self.vout_ov_delay.setEnabled(False)
+                self.vout_ov_delay.setCurrentIndex(0)
+                self.vout_ov_retry.setEnabled(False)
+                self.vout_ov_retry.setCurrentIndex(0)
+                self.num_retries_a = 0
+                self.num_delay_a = 0
+
+        if widget == self.vout_uv_resp:
+            self.num_resp_b = i
+            if i == 0:
+                self.vout_uv_delay.setEnabled(False)
+                self.vout_uv_delay.setCurrentIndex(0)
+                self.vout_uv_retry.setEnabled(False)
+                self.vout_uv_retry.setCurrentIndex(0)
+                self.num_retries_b = 0
+                self.num_delay_b = 0
+            # Delay + retries
+            if i == 1:
+                self.vout_uv_delay.setEnabled(True)
+                self.vout_uv_retry.setEnabled(True)
+            # Retries only; delay = 0
+            if i == 2:
+                self.vout_uv_delay.setEnabled(False)
+                self.vout_uv_delay.setCurrentIndex(0)
+                self.vout_uv_retry.setEnabled(True)
+                self.num_delay_b = 0
+            # Device shuts down immediately; retry = 0, delay = 0
+            if i == 3:
+                self.vout_uv_delay.setEnabled(False)
+                self.vout_uv_delay.setCurrentIndex(0)
+                self.vout_uv_retry.setEnabled(False)
+                self.vout_uv_retry.setCurrentIndex(0)
+                self.num_retries_b = 0
+                self.num_delay_b = 0
+
+        if widget == self.vin_ov_resp:
+            self.num_resp_c = i
+            if i == 0:
+                self.vin_ov_delay.setEnabled(False)
+                self.vin_ov_delay.setCurrentIndex(0)
+                self.vin_ov_retry.setEnabled(False)
+                self.vin_ov_retry.setCurrentIndex(0)
+                self.num_retries_c = 0
+                self.num_delay_c = 0
+            # Delay + retries
+            if i == 1:
+                self.vin_ov_delay.setEnabled(True)
+                self.vin_ov_retry.setEnabled(True)
+            # Retries only; delay = 0
+            if i == 2:
+                self.vin_ov_delay.setEnabled(False)
+                self.vin_ov_delay.setCurrentIndex(0)
+                self.vin_ov_retry.setEnabled(True)
+                self.num_delay_c = 0
+            # Device shuts down immediately; retry = 0, delay = 0
+            if i == 3:
+                self.vin_ov_delay.setEnabled(False)
+                self.vin_ov_delay.setCurrentIndex(0)
+                self.vin_ov_retry.setEnabled(False)
+                self.vin_ov_retry.setCurrentIndex(0)
+                self.num_retries_c = 0
+                self.num_delay_c = 0
+
+        if widget == self.vin_uv_resp:
+            self.num_resp_d = i
+            if i == 0:
+                self.vin_uv_delay.setEnabled(False)
+                self.vin_uv_delay.setCurrentIndex(0)
+                self.vin_uv_retry.setEnabled(False)
+                self.vin_uv_retry.setCurrentIndex(0)
+                self.num_retries_d = 0
+                self.num_delay_d = 0
+            # Delay + retries
+            if i == 1:
+                self.vin_uv_delay.setEnabled(True)
+                self.vin_uv_retry.setEnabled(True)
+            # Retries only; delay = 0
+            if i == 2:
+                self.vin_uv_delay.setEnabled(False)
+                self.vin_uv_delay.setCurrentIndex(0)
+                self.vin_uv_retry.setEnabled(True)
+                self.num_delay_d = 0
+            # Device shuts down immediately; retry = 0, delay = 0
+            if i == 3:
+                self.vin_uv_delay.setEnabled(False)
+                self.vin_uv_delay.setCurrentIndex(0)
+                self.vin_uv_retry.setEnabled(False)
+                self.vin_uv_retry.setCurrentIndex(0)
+                self.num_retries_d = 0
+                self.num_delay_d = 0
+
+        if widget == self.iout_oc_resp:
+            self.num_resp_e = i
+            if i == 0:
+                self.iout_oc_delay.setEnabled(False)
+                self.iout_oc_delay.setCurrentIndex(0)
+                self.iout_oc_retry.setEnabled(False)
+                self.iout_oc_retry.setCurrentIndex(0)
+                self.num_retries_e = 0
+                self.num_delay_e = 0
+            # Delay + retries
+            if i == 1:
+                self.iout_oc_delay.setEnabled(True)
+                self.iout_oc_retry.setEnabled(True)
+            # Retries only; delay = 0
+            if i == 2:
+                self.iout_oc_delay.setEnabled(False)
+                self.iout_oc_delay.setCurrentIndex(0)
+                self.iout_oc_retry.setEnabled(True)
+                self.num_delay_e = 0
+            # Device shuts down immediately; retry = 0, delay = 0
+            if i == 3:
+                self.iout_oc_delay.setEnabled(False)
+                self.iout_oc_delay.setCurrentIndex(0)
+                self.iout_oc_retry.setEnabled(False)
+                self.iout_oc_retry.setCurrentIndex(0)
+                self.num_retries_e = 0
+                self.num_delay_e = 0
+
+        if widget == self.temp_ot_resp:
+            self.num_resp_f = i
+            if i == 0:
+                self.temp_ot_delay.setEnabled(False)
+                self.temp_ot_delay.setCurrentIndex(0)
+                self.temp_ot_retry.setEnabled(False)
+                self.temp_ot_retry.setCurrentIndex(0)
+                self.num_retries_f = 0
+                self.num_delay_f = 0
+            # Delay + retries
+            if i == 1:
+                self.temp_ot_delay.setEnabled(True)
+                self.temp_ot_retry.setEnabled(True)
+            # Retries only; delay = 0
+            if i == 2:
+                self.temp_ot_delay.setEnabled(False)
+                self.temp_ot_delay.setCurrentIndex(0)
+                self.temp_ot_retry.setEnabled(True)
+                self.num_delay_f = 0
+            # Device shuts down immediately; retry = 0, delay = 0
+            if i == 3:
+                self.temp_ot_delay.setEnabled(False)
+                self.temp_ot_delay.setCurrentIndex(0)
+                self.temp_ot_retry.setEnabled(False)
+                self.temp_ot_retry.setCurrentIndex(0)
+                self.num_retries_f = 0
+                self.num_delay_f = 0
+
+    def handle_delays(self, widget, i):
+
+        if widget == self.vout_ov_delay:
+            self.num_delay_a = i
+        if widget == self.vout_uv_delay:
+            self.num_delay_b = i
+        if widget == self.vin_ov_delay:
+            self.num_delay_c = i
+        if widget == self.vin_uv_delay:
+            self.num_delay_d = i
+        if widget == self.iout_oc_delay:
+            self.num_delay_e = i
+        if widget == self.temp_ot_delay:
+            self.num_delay_f = i
+
+    def display_plot(self, name, value):
+
+        group_box = QtGui.QGroupBox(name)
+        group_layout = QtGui.QHBoxLayout()
+        # add plot diagram to graph_frame
+        self.graph = Monitoring.GraphCanvas(value)
+        self.graph.setMinimumSize(200, 400)
+        group_layout.addWidget(self.graph)
+        group_box.setLayout(group_layout)
+        self.scroll_layout.addWidget(group_box)

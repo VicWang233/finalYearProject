@@ -5,14 +5,12 @@
 #                     Author: Angelika Kosciolek                    #
 #                             05/03/2017                            #
 #                                                                   #
-#             Description: GUI Application implementation           #
+#             Description: GUI Application Layout                   #
 #                                                                   #
 #####################################################################
 
 from PyQt4 import QtCore, QtGui
-import LinearConversions
 import SequencingPlot
-import Monitoring
 from PMBusCall import pmbus
 import itertools
 from collections import OrderedDict
@@ -39,45 +37,40 @@ class GuiMainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(GuiMainWindow, self).__init__(parent)
-        self.paint_panel = 0
-        self.index = 1
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.update_monitoring_labels)
-        self.timer.start(1000)
-        self.linear_conv = LinearConversions.LinearConversions()
+        self.setParent(parent)
 
     def set_style(self, main_window):
         main_window.resize(1200, 700)
         main_window.setStyleSheet(_fromUtf8("QFrame{\n"
-                                           "background-color:rgb(255, 255, 255);\n"
-                                           "border: 1px solid rgb(147, 147, 147) } \n"
+                                            "background-color:rgb(255, 255, 255);\n"
+                                            "border: 1px solid rgb(147, 147, 147) } \n"
 
-                                           "QLabel{\n"
-                                           "border:none;\n"
-                                           "background-color:transparent;}\n"
+                                            "QLabel{\n"
+                                            "border:none;\n"
+                                            "background-color:transparent;}\n"
 
-                                           "QToolButton{\n"
-                                           "background-color:transparent;\n"
-                                           "border:none;}\n"
+                                            "QToolButton{\n"
+                                            "background-color:transparent;\n"
+                                            "border:none;}\n"
 
-                                           "QToolButton:pressed{\n"
-                                           "background-color:rgb(215, 224, 243);\n"
-                                           "border: 1px solid rgb(147, 147, 147);}\n"
+                                            "QToolButton:pressed{\n"
+                                            "background-color:rgb(215, 224, 243);\n"
+                                            "border: 1px solid rgb(147, 147, 147);}\n"
 
-                                           "QToolButton:checked{\n"
-                                           "background-color:rgb(101, 135, 205);\n"
-                                           "border: 1px solid rgb(147, 147, 147);}\n"
+                                            "QToolButton:checked{\n"
+                                            "background-color:rgb(101, 135, 205);\n"
+                                            "border: 1px solid rgb(147, 147, 147);}\n"
 
-                                           "QToolButton:hover {\n"
-                                           "background-color:rgb(215, 224, 243);}\n"
+                                            "QToolButton:hover {\n"
+                                            "background-color:rgb(215, 224, 243);}\n"
 
-                                           "QGroupBox { background-color:rgb(220, 228, 244); }\n"
+                                            "QGroupBox { background-color:rgb(220, 228, 244); }\n"
 
-                                           "QMainWindow { background-color:rgb(220, 228, 244); }\n"
+                                            "QMainWindow { background-color:rgb(220, 228, 244); }\n"
 
-                                           "QStackedWidget {\n"
-                                           "background-color:rgb(220, 228, 244);\n"
-                                           "border: 1px solid rgb(147, 147, 147)}\n" ))
+                                            "QStackedWidget {\n"
+                                            "background-color:rgb(220, 228, 244);\n"
+                                            "border: 1px solid rgb(147, 147, 147)}\n"))
 
     def menu(self):
 
@@ -103,201 +96,20 @@ class GuiMainWindow(QtGui.QMainWindow):
         mon = self.create_button_tab(810, 10, 190, 51, "Monitoring", self.page5, "icons/mon.png")
         mon.setStatusTip("Device's monitoring")
 
-    def text_validation(self, text_field):
-        reg_ex = QtCore.QRegExp("^\d+(\.\d{1,2})?$")
-        text_validator = QtGui.QRegExpValidator(reg_ex, text_field)
-        text_field.setValidator(text_validator)
-
-    def text_validation_hex(self, text_field):
-        reg_ex = QtCore.QRegExp("^0x[0-9A-Fa-f]+$")
-        text_validator = QtGui.QRegExpValidator(reg_ex, text_field)
-        text_field.setValidator(text_validator)
-
-    def create_label(self, group, x, y, w, h, text):
-
-        label = QtGui.QLabel(group)
-        label.setGeometry(QtCore.QRect(x, y, w, h))
-        label.setText(text)
-        return label
-
-    def create_button_tab(self, x, y, w, h, text, page, icon):
-
-        button_tab = QtGui.QToolButton(self.buttons_frame)
-        button_tab.setGeometry(QtCore.QRect(x, y, w, h))
-        button_tab.setCheckable(True)
-        button_tab.setAutoExclusive(True)
-        button_tab.clicked.connect(page)
-        button_tab.setText(_translate("MainWindow", text, None))
-        button_tab.setIcon(QtGui.QIcon(icon))
-        button_tab.setIconSize(QtCore.QSize(32, 32))
-        button_tab.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon | QtCore.Qt.AlignLeading)
-        return button_tab
-
-    def size_and_name(self, component, x, y, w, h, name):
-
-        component.setGeometry(QtCore.QRect(x, y, w, h))
-        component.setTitle(_translate("MainWindow", name, None))
-
-    def create_line_edit(self, text):
-
-        line_edit = QtGui.QLineEdit()
-        line_edit.setAlignment(QtCore.Qt.AlignRight)
-        line_edit.setText(text)
-        self.text_validation(line_edit)  # validate user input
-        arg = functools.partial(self.handle_editing_finished, line_edit)
-        line_edit.textChanged.connect(arg)
-        return line_edit
-
-    def create_hex_line_edit(self, text):
-
-        line_edit = QtGui.QLineEdit()
-        line_edit.setAlignment(QtCore.Qt.AlignRight)
-        line_edit.setText(text)
-        self.text_validation_hex(line_edit)  # validate user input
-        arg = functools.partial(self.handle_hex_lineedit, line_edit)
-        line_edit.textChanged.connect(arg)
-        return line_edit
-
-    def create_checkbox(self):
-
-        checkbox = QtGui.QCheckBox()
-        checkbox.setChecked(True)
-        checkbox.stateChanged.connect(self.state_changed)
-        return checkbox
-
-    def handle_hex_lineedit(self, line_edit):
-        widget = line_edit
-        if widget.text().isEmpty():
-            widget.setText("0x0000")
-
-    def handle_editing_finished(self, line_edit):
-
-        if self.toff_max.isModified():
-            self.toffmax_label.setText("TOFF_MAX = " + self.toff_max.text())
-        elif self.ton_max.isModified():
-            self.tonmax_label.setText("TON_MAX = " + self.ton_max.text())
-        elif self.ton_delay.isModified():
-            self.tondelay_label.setText(self.ton_delay.text())
-        elif self.toff_delay.isModified():
-            self.toffdelay_label.setText(self.toff_delay.text())
-        elif self.ton_rise.isModified():
-            self.tonrise_label.setText(self.ton_rise.text())
-        elif self.toff_fall.isModified():
-            self.tofffall_label.setText(self.toff_fall.text())
-        elif self.vout_on.isModified():
-            self.vouton_label.setText("VOUT ON \n " + self.vout_on.text() + " V")
-        elif self.vout_off.isModified():
-            self.voutoff_label.setText("VOUT OFF \n " + self.vout_off.text() + " V")
-
-        self.toff_max.setModified(False)
-        self.ton_max.setModified(False)
-        self.ton_delay.setModified(False)
-        self.toff_delay.setModified(False)
-        self.ton_rise.setModified(False)
-        self.toff_fall.setModified(False)
-        self.vout_off.setModified(False)
-        self.vout_on.setModified(False)
-
-        if self.rwv_l11.isModified() and not self.rwv_l11.text().isEmpty():
-            value = self.rwv_l11.text()
-            self.encoded_hex_l11.setText(self.linear_conv.float_to_l11(float(value)))
-
-        if self.rwv_l16.isModified() and not self.rwv_l16.text().isEmpty():
-            value = self.rwv_l16.text()
-            self.encoded_hex_l16.setText(self.linear_conv.float_to_l16(float(value)))
-
-        if self.encoded_hex_l11.isModified() and not self.encoded_hex_l11.text().isEmpty():
-            value = self.encoded_hex_l11.text()
-            self.rwv_l11.setText(self.linear_conv.l11_to_float(int(value)))
-
-        if self.encoded_hex_l16.isModified() and not self.encoded_hex_l16.text().isEmpty():
-            value = self.encoded_hex_l16.text()
-            self.rwv_l16.setText(self.linear_conv.l16_to_float(int(value)))
-
-        widget = line_edit
-        if widget.text().isEmpty():
-            widget.setText("0")
-
-    def state_changed(self):
-
-        is_checked = [self.vout_ov_enable.isChecked(), self.vout_uv_enable.isChecked(),
-                      self.vin_uv_enable.isChecked(), self.vin_ov_enable.isChecked(),
-                      self.iout_oc_enable.isChecked(), self.temp_ot_enable.isChecked()]
-
-        widgets = [self.vout_ov_warning, self.vout_ov_fault, self.vout_ov_delay,
-                   self.vout_ov_walert, self.vout_ov_falert, self.vout_uv_warning,
-                   self.vout_uv_fault, self.vout_uv_delay, self.vout_uv_walert,
-                   self.vout_uv_falert, self.vin_ov_warning, self.vin_ov_fault,
-                   self.vin_ov_delay, self.vin_ov_walert, self.vin_ov_falert,
-                   self.vin_uv_warning, self.vin_uv_fault, self.vin_uv_delay,
-                   self.vin_uv_walert, self.vin_uv_falert, self.iout_oc_warning,
-                   self.iout_oc_fault, self.iout_oc_delay, self.iout_oc_walert,
-                   self.iout_oc_falert, self.temp_ot_warning, self.temp_ot_fault,
-                   self.temp_ot_delay, self.temp_ot_walert, self.temp_ot_falert]
-
-        if self.vout_ov_enable.isChecked():
-            for i in range(5):
-                widgets[i].setEnabled(True)
-        else:
-            for i in range(5):
-                widgets[i].setEnabled(False)
-
-        if self.vout_uv_enable.isChecked():
-            for i in range(5, 10):
-                widgets[i].setEnabled(True)
-        else:
-            for i in range(5, 10):
-                widgets[i].setEnabled(False)
-
-        if self.vin_ov_enable.isChecked():
-            for i in range(10, 15):
-                widgets[i].setEnabled(True)
-        else:
-            for i in range(10, 15):
-                widgets[i].setEnabled(False)
-
-        if self.vin_uv_enable.isChecked():
-            for i in range(15, 20):
-                widgets[i].setEnabled(True)
-        else:
-            for i in range(15, 20):
-                widgets[i].setEnabled(False)
-
-        if self.iout_oc_enable.isChecked():
-            for i in range(20, 25):
-                widgets[i].setEnabled(True)
-        else:
-            for i in range(20, 25):
-                widgets[i].setEnabled(False)
-
-        if self.temp_ot_enable.isChecked():
-            for i in range(25, 30):
-                widgets[i].setEnabled(True)
-        else:
-            for i in range(25, 30):
-                widgets[i].setEnabled(False)
-
-    def selection_change(self, i):
-
-        if self.cb.currentText() == "OPERATION_CMD":
-            self.control_pin.setEnabled(False)
-            self.operation_cmd.setEnabled(True)
-            self.cb_mon.setEnabled(True)
-            pmbus.configure_command(pmbus.device, "iw_3f0020218")  # write operation cmd 0x18
-        elif self.cb.currentText() == "CTRL_POS":
-            self.control_pin.setEnabled(True)
-            self.operation_cmd.setEnabled(False)
-            self.cb_mon.setEnabled(False)
-            pmbus.configure_command(pmbus.device, "iw_3f0020216")  # write ctrl_pos 0x16
-        else:
-            self.control_pin.setEnabled(True)
-            self.operation_cmd.setEnabled(False)
-            self.cb_mon.setEnabled(False)
-            pmbus.configure_command(pmbus.device, "iw_3f0020214")  # write ctrl_neg 0x14
-
-        print "Current index", i, "selection changed ", self.cb.currentText()
-
     def page1_main(self):
+
+        # PMBus variables
+        vout_val = pmbus.l16_query_command(pmbus.device, "iq_3f010221")  # vout_command L16
+        margin_high = pmbus.l16_query_command(pmbus.device, "iq_3f010225")
+        margin_low = pmbus.l16_query_command(pmbus.device, "iq_3f010226")
+
+        perc_decrease = 0
+        perc_increase = 0
+
+        # margin high and margin low to percent conversion
+        if float(vout_val) != 0:
+            perc_decrease = ((float(vout_val) - float(margin_low)) / float(vout_val)) * 100
+            perc_increase = ((float(margin_high) - float(vout_val)) / float(vout_val)) * 100
 
         # create page
         self.page = QtGui.QWidget()
@@ -314,9 +126,6 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.schematic.setStatusTip('EM2130 Circuit Diagram')
         self.schematic.setStyleSheet('border: 1px solid rgb(147, 147, 147)')
 
-        # PMBus variables
-        vout_val = pmbus.l16_query_command(pmbus.device, "iq_3f010221")  # vout_command L16
-
         # voltage group box
         self.voltage_box = QtGui.QGroupBox(self.power_stage_box)
         self.size_and_name(self.voltage_box, 750, 20, 181, 241, "Voltage")
@@ -327,13 +136,16 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         # text fields for voltage group
         self.vin_nom = self.create_line_edit("12")
-        self.vin_nom.setStatusTip('Enter here the nominal input voltage')
+        self.vin_nom.setReadOnly(True)
+        self.vin_nom.setStatusTip('Nominal input voltage is 12V')
         self.vout_nom = self.create_line_edit(vout_val)
         self.vout_nom.setStatusTip('Enter here the nominal output voltage')
-        self.marg_high = self.create_line_edit("5")
-        self.marg_high.setStatusTip('Enter here the percent increase of VOUT')
-        self.marg_low = self.create_line_edit("5")
-        self.marg_low.setStatusTip('Enter here the percent decrease of VOUT')
+        self.marg_high = self.create_line_edit(str(round(perc_increase)))
+        self.marg_high.textChanged.connect(self.check_range)
+        self.marg_high.setStatusTip('Enter here the increase of VOUT')
+        self.marg_low = self.create_line_edit(str(round(perc_decrease)))
+        self.marg_low.textChanged.connect(self.check_range)
+        self.marg_low.setStatusTip('Enter here the decrease of VOUT')
 
         grid.addWidget(QtGui.QLabel("Nominal"), 0, 1)
         grid.addWidget(QtGui.QLabel("VIN"), 1, 0)
@@ -351,7 +163,6 @@ class GuiMainWindow(QtGui.QMainWindow):
         grid.addWidget(self.marg_low, 5, 1)
         grid.addWidget(QtGui.QLabel("%"), 5, 2)
         grid.addWidget(QtGui.QLabel(" "), 6, 0)
-
 
         self.stacked_widget.addWidget(self.page)
 
@@ -379,20 +190,28 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         # set text fields
         self.ton_delay = self.create_line_edit(ton_delay_val)
+        self.ton_delay.textChanged.connect(self.check_range)
         self.ton_delay.setStatusTip('Enter here turn on delay interval')
         self.toff_delay = self.create_line_edit(toff_delay_val)
+        self.toff_delay.textChanged.connect(self.check_range)
         self.toff_delay.setStatusTip('Enter here turn off delay interval')
         self.ton_rise = self.create_line_edit(ton_rise_val)
+        self.ton_rise.textChanged.connect(self.check_range)
         self.ton_rise.setStatusTip('Enter here turn on rise interval')
         self.toff_fall = self.create_line_edit(toff_fall_val)
+        self.toff_fall.textChanged.connect(self.check_range)
         self.toff_fall.setStatusTip('Enter here turn off fall interval')
         self.ton_max = self.create_line_edit(ton_max_val)
+        self.ton_max.textChanged.connect(self.check_range)
         self.ton_max.setStatusTip('Enter here turn on max interval')
         self.toff_max = self.create_line_edit(toff_max_val)
+        self.toff_max.textChanged.connect(self.check_range)
         self.toff_max.setStatusTip('Enter here turn off max interval')
         self.vout_on = self.create_line_edit(vout_on_val)
+        self.vout_on.textChanged.connect(self.check_range)
         self.vout_on.setStatusTip('Enter here the desired output voltage')
         self.vout_off = self.create_line_edit(vout_off_val)
+        self.vout_off.textChanged.connect(self.check_range)
         self.vout_off.setStatusTip('Enter here the terminal value of the output voltage')
 
         # set combo box
@@ -457,7 +276,6 @@ class GuiMainWindow(QtGui.QMainWindow):
         grid.addWidget(QtGui.QLabel("Device Startup:"), 3, 1)
         grid.addWidget(self.cb, 3, 2, 1, 2)
         grid.addWidget(QtGui.QLabel(" "), 4, 0)
-
 
         self.graph_frame = QtGui.QFrame(self.configuration_box)
         self.graph_frame.setGeometry(QtCore.QRect(20, 20, 930, 315))
@@ -570,7 +388,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.pmbus_cb.currentIndexChanged.connect(self.selection_pmbus_commands)
 
         # set widgets for direct_access_box
-        self.code = self.create_line_edit("0x01")
+        self.code = self.create_hex_line_edit("0x01")
         self.code.setStatusTip('Command in hex')
         self.code.setReadOnly(True)
         self.size = self.create_line_edit("1")
@@ -650,63 +468,23 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         self.stacked_widget.addWidget(self.page_3)
 
-    def selection_pmbus_commands(self):
-        # set code
-        key = str(self.pmbus_cb.currentText())  # make sure it's a string
-        value = self.dict.get(key)
-        code_val = '0x' + hex(value[0])[2:].zfill(2)
-        self.code.setText(code_val)
-
-        # set size
-        size_val = value[1]
-        self.size.setText(str(size_val))
-
-        # set read button
-        cmd_hex = code_val[2:]
-        arg1 = functools.partial(self.handle_rd_direct, cmd_hex, size_val)
-        if pmbus.device == None:
-            self.read_direct.setEnabled(False)
-        elif code_val is not self.write_only:
-            self.read_direct.setEnabled(True)
-            self.read_direct.clicked.connect(arg1)
-        else:
-            self.read_direct.setEnabled(False)
-
-        # set write button
-        arg2 = functools.partial(self.handle_wr_direct, cmd_hex)
-        if pmbus.device == None:
-            self.write_direct.setEnabled(False)
-        elif code_val is not self.read_only:
-            self.write_direct.setEnabled(True)
-            self.write_direct.clicked.connect(arg2)
-        else:
-            self.write_direct.setEnabled(False)
-
-    def handle_rd_direct(self, arg, size):
-        if size > 2:
-            size += 1
-        response = pmbus.configure_command(pmbus.device, "iq_3f010" + str(size) + str(arg))
-        a = response[-4:]
-        b = response[1:3]
-        a = a.rstrip()
-        b = b.rstrip()
-        hex_value = "0x" + a + b
-        decimal_value = int(hex_value, 16)
-        self.read_dec.setText(str(decimal_value))
-        self.read_hex.setText(hex_value)
-
-        response_l11 = pmbus.l11_query_command(pmbus.device, "iq_3f010" + str(size) + str(arg))
-        response_l16 = pmbus.l16_query_command(pmbus.device, "iq_3f010" + str(size) + str(arg))
-        self.read_l11.setText(response_l11)
-        self.read_l16.setText(response_l16)
-
-    def handle_wr_direct(self, arg):
-        pmbus.write_direct(pmbus.device, "iw_3f003" + arg, self.write_hex.text())
-
     def page4_protection(self):
 
         # create page 4
         self.page_4 = QtGui.QWidget()
+
+        first_tip = 'The PMBus device continues operation without interruption.'
+        second_tip = ('The PMBus device continues operation for the delay time specified.\n'
+                      'If the fault condition is still present at the end of the delay time,\n'
+                      'the unit responds as programmed in the retry setting.')
+        third_tip = 'The device shuts down and responds according to the retry setting.'
+        fourth_tip = ('The device\'s output is disabled while the fault is present.\n'
+                      'Operation resumes and the output is enabled when the fault condition no longer exists.')
+
+        retries = ['None', '1', '2', '3', '4', '5', '6', 'Infinity']
+        resposes = ['Continue', 'Delay and retry', 'Retry only', 'Device shut down']
+        item_data = [first_tip, second_tip, third_tip, fourth_tip]
+        delays = ['0.00', '1.50', '3.00', '4.50', '6.00', '7.50', '9.00', '10.50']
 
         # create protection group box
         protection_box = QtGui.QGroupBox(self.page_4)
@@ -719,18 +497,81 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.vin_uv_enable = self.create_checkbox()
         self.temp_ot_enable = self.create_checkbox()
         self.iout_oc_enable = self.create_checkbox()
-        self.vout_ov_walert = self.create_checkbox()
-        self.vout_uv_walert = self.create_checkbox()
-        self.vin_ov_walert = self.create_checkbox()
-        self.vin_uv_walert = self.create_checkbox()
-        self.iout_oc_walert = self.create_checkbox()
-        self.temp_ot_walert = self.create_checkbox()
-        self.vout_ov_falert = self.create_checkbox()
-        self.vout_uv_falert = self.create_checkbox()
-        self.vin_ov_falert = self.create_checkbox()
-        self.vin_uv_falert = self.create_checkbox()
-        self.iout_oc_falert = self.create_checkbox()
-        self.temp_ot_falert = self.create_checkbox()
+
+        # combo-boxes for delay time units
+        self.vout_ov_delay = QtGui.QComboBox()
+        self.vout_uv_delay = QtGui.QComboBox()
+        self.vin_ov_delay = QtGui.QComboBox()
+        self.vin_uv_delay = QtGui.QComboBox()
+        self.iout_oc_delay = QtGui.QComboBox()
+        self.temp_ot_delay = QtGui.QComboBox()
+
+        self.widgets_delays = [self.vout_ov_delay, self.vout_uv_delay, self.vin_ov_delay,
+                          self.vin_uv_delay, self.iout_oc_delay, self.temp_ot_delay]
+
+        # combo-boxes for retries
+        self.vout_ov_retry = QtGui.QComboBox()
+        self.vout_uv_retry = QtGui.QComboBox()
+        self.vin_ov_retry = QtGui.QComboBox()
+        self.vin_uv_retry = QtGui.QComboBox()
+        self.iout_oc_retry = QtGui.QComboBox()
+        self.temp_ot_retry = QtGui.QComboBox()
+
+        self.widgets_retries = [self.vout_ov_retry, self.vout_uv_retry, self.vin_ov_retry,
+                   self.vin_uv_retry, self.iout_oc_retry, self.temp_ot_retry]
+
+        # combo-boxes for response type
+        self.vout_ov_resp = QtGui.QComboBox()
+        self.vout_uv_resp = QtGui.QComboBox()
+        self.vin_ov_resp = QtGui.QComboBox()
+        self.vin_uv_resp = QtGui.QComboBox()
+        self.iout_oc_resp = QtGui.QComboBox()
+        self.temp_ot_resp = QtGui.QComboBox()
+
+        self.widgets_responses = [self.vout_ov_resp, self.vout_uv_resp, self.vin_ov_resp,
+                             self.vin_uv_resp, self.iout_oc_resp, self.temp_ot_resp]
+
+        for item in delays:
+            self.vout_ov_delay.addItem(item)
+            self.vout_uv_delay.addItem(item)
+            self.vin_ov_delay.addItem(item)
+            self.vin_uv_delay.addItem(item)
+            self.iout_oc_delay.addItem(item)
+            self.temp_ot_delay.addItem(item)
+
+        for widget in self.widgets_delays:
+            arg = functools.partial(self.handle_delays, widget)
+            widget.currentIndexChanged.connect(arg)
+
+        for item in retries:
+            self.vout_ov_retry.addItem(item)
+            self.vout_uv_retry.addItem(item)
+            self.vin_ov_retry.addItem(item)
+            self.vin_uv_retry.addItem(item)
+            self.iout_oc_retry.addItem(item)
+            self.temp_ot_retry.addItem(item)
+
+        for widget in self.widgets_retries:
+            arg = functools.partial(self.handle_retries, widget)
+            widget.currentIndexChanged.connect(arg)
+
+        for item, i, data in zip(resposes, range(len(item_data)), item_data):
+            self.vout_ov_resp.addItem(item)
+            self.vout_ov_resp.setItemData(i, data, QtCore.Qt.ToolTipRole)
+            self.vout_uv_resp.addItem(item)
+            self.vout_uv_resp.setItemData(i, data, QtCore.Qt.ToolTipRole)
+            self.vin_ov_resp.addItem(item)
+            self.vin_ov_resp.setItemData(i, data, QtCore.Qt.ToolTipRole)
+            self.vin_uv_resp.addItem(item)
+            self.vin_uv_resp.setItemData(i, data, QtCore.Qt.ToolTipRole)
+            self.iout_oc_resp.addItem(item)
+            self.iout_oc_resp.setItemData(i, data, QtCore.Qt.ToolTipRole)
+            self.temp_ot_resp.addItem(item)
+            self.temp_ot_resp.setItemData(i, data, QtCore.Qt.ToolTipRole)
+
+        for widget in self.widgets_responses:
+            arg = functools.partial(self.handle_responses, widget)
+            widget.currentIndexChanged.connect(arg)
 
         #  PMBus variables
         vout_ov_war_val = pmbus.l16_query_command(pmbus.device, "iq_3f010242")
@@ -748,43 +589,41 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         # text fields
         self.vout_ov_warning = self.create_line_edit(vout_ov_war_val)
+        self.vout_ov_warning.textChanged.connect(self.check_range)
         self.vout_ov_warning.setStatusTip('Enter here output over-voltage warning threshold')
         self.vout_uv_warning = self.create_line_edit(vout_uv_war_val)
+        self.vout_uv_warning.textChanged.connect(self.check_range)
         self.vout_uv_warning.setStatusTip('Enter here output under-voltage warning threshold')
         self.vin_ov_warning = self.create_line_edit(vin_ov_war_val)
+        self.vin_ov_warning.textChanged.connect(self.check_range)
         self.vin_ov_warning.setStatusTip('Enter here input over-voltage warning threshold')
         self.vin_uv_warning = self.create_line_edit(vin_uv_war_val)
+        self.vin_uv_warning.textChanged.connect(self.check_range)
         self.vin_uv_warning.setStatusTip('Enter here input under-voltage warning threshold')
         self.iout_oc_warning = self.create_line_edit(iout_oc_war_val)
+        self.iout_oc_warning.textChanged.connect(self.check_range)
         self.iout_oc_warning.setStatusTip('Enter here output over-current warning threshold')
         self.temp_ot_warning = self.create_line_edit(temp_ot_war_val)
+        self.temp_ot_warning.textChanged.connect(self.check_range)
         self.temp_ot_warning.setStatusTip('Enter here over-temperature warning threshold')
-
         self.vout_ov_fault = self.create_line_edit(vout_ov_fal_val)
+        self.vout_ov_fault.textChanged.connect(self.check_range)
         self.vout_ov_fault.setStatusTip('Enter here output over-voltage fault threshold')
         self.vout_uv_fault = self.create_line_edit(vout_uv_fal_val)
+        self.vout_uv_fault.textChanged.connect(self.check_range)
         self.vout_uv_fault.setStatusTip('Enter here output under-voltage fault threshold')
         self.vin_ov_fault = self.create_line_edit(vin_ov_fal_val)
+        self.vin_ov_fault.textChanged.connect(self.check_range)
         self.vin_ov_fault.setStatusTip('Enter here input over-voltage fault threshold')
         self.vin_uv_fault = self.create_line_edit(vin_uv_fal_val)
+        self.vin_uv_fault.textChanged.connect(self.check_range)
         self.vin_uv_fault.setStatusTip('Enter here input under-voltage fault threshold')
         self.iout_oc_fault = self.create_line_edit(iout_oc_fal_val)
+        self.iout_oc_fault.textChanged.connect(self.check_range)
         self.iout_oc_fault.setStatusTip('Enter here output over-current fault threshold')
         self.temp_ot_fault = self.create_line_edit(temp_ot_fal_val)
+        self.temp_ot_fault.textChanged.connect(self.check_range)
         self.temp_ot_fault.setStatusTip('Enter here over-temperature fault threshold')
-
-        self.vout_ov_delay = self.create_line_edit("0.00")
-        self.vout_ov_delay.setStatusTip('Enter here output over-voltage delay')
-        self.vout_uv_delay = self.create_line_edit("0.00")
-        self.vout_uv_delay.setStatusTip('Enter here output under-voltage delay')
-        self.vin_ov_delay = self.create_line_edit("0.00")
-        self.vin_ov_delay.setStatusTip('Enter here input over-voltage delay')
-        self.vin_uv_delay = self.create_line_edit("0.00")
-        self.vin_uv_fault.setStatusTip('Enter here input under-voltage delay')
-        self.iout_oc_delay = self.create_line_edit("0.00")
-        self.iout_oc_delay.setStatusTip('Enter here output over-current delay')
-        self.temp_ot_delay = self.create_line_edit("0.00")
-        self.temp_ot_delay.setStatusTip('Enter here over-temperature delay')
 
         grid = QtGui.QGridLayout()
 
@@ -792,28 +631,28 @@ class GuiMainWindow(QtGui.QMainWindow):
         grid.addWidget(QtGui.QLabel(" "), 0, 1, 1, 1, QtCore.Qt.AlignTop)
 
         # First row
-        grid.addWidget(QtGui.QLabel("Enable"), 1, 2, 1, 1, QtCore.Qt.AlignTop)
+        grid.addWidget(QtGui.QLabel("Enable"), 1, 2, 1, 1, QtCore.Qt.AlignCenter)
         grid.addWidget(QtGui.QLabel("Warning Limit"), 1, 3, 1, 1, QtCore.Qt.AlignCenter)
         grid.addWidget(QtGui.QLabel("\t"), 1, 4, 1, 1, QtCore.Qt.AlignTop)
         grid.addWidget(QtGui.QLabel("Fault Limit"), 1, 5, 1, 1, QtCore.Qt.AlignCenter)
         grid.addWidget(QtGui.QLabel("\t"), 1, 6, 1, 1, QtCore.Qt.AlignTop)
-        grid.addWidget(QtGui.QLabel("Time Delay"), 1, 7, 1, 1, QtCore.Qt.AlignCenter)
+        grid.addWidget(QtGui.QLabel("Delay"), 1, 7, 1, 1, QtCore.Qt.AlignCenter)
         grid.addWidget(QtGui.QLabel("\t"), 1, 8, 1, 1, QtCore.Qt.AlignTop)
-        grid.addWidget(QtGui.QLabel("Alert (W/F)"), 1, 9, 1, 1, QtCore.Qt.AlignCenter)
+        grid.addWidget(QtGui.QLabel("Number of Retries"), 1, 9, 1, 1, QtCore.Qt.AlignCenter)
+        grid.addWidget(QtGui.QLabel("Type of Response"), 1, 10, 1, 1, QtCore.Qt.AlignCenter)
 
-        #grid.setVerticalSpacing(40)
         grid.setRowMinimumHeight(5, 5)
 
         titles = ["VOUT OV", "VOUT UV", "VIN OV", "VIN UV", "IOUT", "TEMP"]
         widgets = [self.vout_ov_enable, self.vout_ov_warning, self.vout_ov_fault, self.vout_ov_delay,
-                   self.vout_ov_walert, self.vout_ov_falert, self.vout_uv_enable, self.vout_uv_warning,
-                   self.vout_uv_fault, self.vout_uv_delay, self.vout_uv_walert, self.vout_uv_falert,
+                   self.vout_ov_retry, self.vout_ov_resp, self.vout_uv_enable, self.vout_uv_warning,
+                   self.vout_uv_fault, self.vout_uv_delay, self.vout_uv_retry, self.vout_uv_resp,
                    self.vin_ov_enable, self.vin_ov_warning, self.vin_ov_fault, self.vin_ov_delay,
-                   self.vin_ov_walert, self.vin_ov_falert, self.vin_uv_enable, self.vin_uv_warning,
-                   self.vin_uv_fault, self.vin_uv_delay, self.vin_uv_walert, self.vin_uv_falert,
+                   self.vin_ov_retry, self.vin_ov_resp, self.vin_uv_enable, self.vin_uv_warning,
+                   self.vin_uv_fault, self.vin_uv_delay, self.vin_uv_retry, self.vin_uv_resp,
                    self.iout_oc_enable, self.iout_oc_warning, self.iout_oc_fault, self.iout_oc_delay,
-                   self.iout_oc_walert, self.iout_oc_falert, self.temp_ot_enable, self.temp_ot_warning,
-                   self.temp_ot_fault, self.temp_ot_delay, self.temp_ot_walert, self.temp_ot_falert]
+                   self.iout_oc_retry, self.iout_oc_resp, self.temp_ot_enable, self.temp_ot_warning,
+                   self.temp_ot_fault, self.temp_ot_delay, self.temp_ot_retry, self.temp_ot_resp]
 
         items = [2, 3, 4, 5, 6, 7]
         cols = [2, 3, 5, 7, 9, 10]
@@ -839,9 +678,8 @@ class GuiMainWindow(QtGui.QMainWindow):
                 grid.addWidget(QtGui.QLabel(u"\u00b0" + "C"), 7, 6)
             else:
                 grid.addWidget(QtGui.QLabel("V"), i, 6)
-            grid.addWidget(QtGui.QLabel("ms"), i, 8)
+            grid.addWidget(QtGui.QLabel("us"), i, 8)
             grid.addWidget(QtGui.QLabel("  "), i, 11)
-
 
         for value, r, c in zip(widgets, rows, itertools.cycle(cols)):
             grid.addWidget(value, r, c)
@@ -861,9 +699,17 @@ class GuiMainWindow(QtGui.QMainWindow):
         vin_off_val = pmbus.l11_query_command(pmbus.device, "iq_3f010236")
 
         self.power_on = self.create_line_edit(power_on_val)
+        self.power_on.textChanged.connect(self.check_range)
+        self.power_on.setStatusTip('Enter here Power OK on level')
         self.vin_on = self.create_line_edit(vin_on_val)
+        self.vin_on.textChanged.connect(self.check_range)
+        self.vin_on.setStatusTip('Enter here VIN on level')
         self.power_off = self.create_line_edit(power_off_val)
+        self.power_off.textChanged.connect(self.check_range)
+        self.power_off.setStatusTip('Enter here Power OK off level')
         self.vin_off = self.create_line_edit(vin_off_val)
+        self.vin_off.textChanged.connect(self.check_range)
+        self.vin_off.setStatusTip('Enter here VIN off level')
 
         grid2.addWidget(QtGui.QLabel(" "), 0, 1, 1, 1, QtCore.Qt.AlignCenter)
         grid2.addWidget(QtGui.QLabel("ON Level Value"), 0, 3, 1, 1, QtCore.Qt.AlignCenter)
@@ -904,6 +750,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.clear_faults_but = QtGui.QPushButton(self.monitoring_box)
         self.clear_faults_but.setGeometry(QtCore.QRect(20, 240, 100, 23))
         self.clear_faults_but.setText("Clear Faults")
+        self.clear_faults_but.clicked.connect(self.handle_clear_faults)
 
         # device startup
         self.control_pin = QtGui.QPushButton(self.monitoring_box)
@@ -979,94 +826,6 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.monitoring_frame.setLayout(layout)
         self.stacked_widget.addWidget(self.page_5)
 
-    def mon_on_off(self):
-        if self.index:
-            self.pix_map = QtGui.QPixmap('icons/red.jpg')
-            self.led.setPixmap(self.pix_map)
-            self.timer.stop()
-        else:
-            self.pix_map = QtGui.QPixmap('icons/green.jpg')
-            self.led.setPixmap(self.pix_map)
-            self.timer.start(1000)
-        self.index = not self.index
-
-    def write_to_device(self):
-        #  WRITE NEW CONFIGURATION TO THE DEVICE
-        #  GET INFO FROM ALL TEXT FIELDS
-        #
-        values_l11 = [self.ton_delay.text(), self.ton_rise.text(), self.ton_max.text(),
-                      self.toff_delay.text(), self.toff_fall.text(), self.toff_max.text(),
-                      self.iout_oc_fault.text(), self.iout_oc_warning.text(), self.temp_ot_fault.text(),
-                      self.temp_ot_warning.text(), self.vin_ov_fault.text(), self.vin_ov_warning.text(),
-                      self.vin_uv_warning.text(), self.vin_uv_fault.text(), self.vin_on.text(),
-                      self.vin_off.text()]
-
-        values_l16 = [self.vout_nom.text(), self.vout_ov_fault.text(), self.vout_ov_warning.text(),
-                      self.vout_uv_warning.text(), self.vout_uv_fault.text(), self.power_on.text(),
-                      self.power_off.text()]
-
-        pmbus_l11_hex_codes = ["60", "61", "62", "64", "65", "66", "66", "46", "4A",
-                               "4F", "51", "55", "57", "58", "59", "35", "36"]
-        pmbus_l16_hex_codes = ["21", "40", "42", "43", "44", "5E", "5F"]
-
-        for value, code in zip(values_l11, pmbus_l11_hex_codes):
-            pmbus.l11_write_command(pmbus.device, "iw_3f003" + code, float(value))
-
-        for value, code in zip(values_l16, pmbus_l16_hex_codes):
-            pmbus.l16_write_command(pmbus.device, "iw_3f003" + code, float(value))
-
-    def update_monitoring_labels(self):
-        vin_average = pmbus.l11_query_command(pmbus.device, "iq_3f010288")
-        self.vin_average_label.setText("VIN:  " + vin_average + " V")
-        vout_average = pmbus.l16_query_command(pmbus.device, "iq_3f01028B")
-        self.vout_average_label.setText("VOUT:  " + vout_average + " V")
-        iout_average = pmbus.l11_query_command(pmbus.device, "iq_3f01028C")
-        self.iout_average_label.setText("IOUT:  " + iout_average + " A")
-        temp_average = pmbus.l11_query_command(pmbus.device, "iq_3f01028E")
-        self.temp_average_label.setText("TEMP:  " + temp_average + " " + u"\u00b0" + "C")
-
-    def do_pause(self):
-        self.monitoring_but.clicked.connect(self.graph.stop_timer)
-
-
-    def handle_control_pin(self):
-        pmbus.configure_command(pmbus.device, "iw_3f0020216")  # set ON_OFF_CONFIG to 0x16 for Control Pin
-        if self.index_pin:
-            pmbus.configure_command(pmbus.device, "ip_1")
-        else:
-            pmbus.configure_command(pmbus.device, "ip_0")
-        self.index_pin = not self.index_pin
-
-    def handle_operation_cmd(self):
-        if self.index_oper_cmd:
-            pmbus.configure_command(pmbus.device, "iw_3f0020180")  # turn device on
-        else:
-            if self.cb_mon.currentText() == "Immediate off w/o sequencing":
-                pmbus.configure_command(pmbus.device, "iw_3f0020100")  # 0x00 immediate off w/o sequencing
-            elif self.cb_mon.currentText() == "Soft off with sequencing":
-                pmbus.configure_command(pmbus.device, "iw_3f0020140")  # 0x40 soft off with sequencing
-            elif self.cb_mon.currentText() == "On":
-                pmbus.configure_command(pmbus.device, "iw_3f0020180")  # 0x80 on
-            elif self.cb_mon.currentText() == "Margin Low w/o fault":
-                pmbus.configure_command(pmbus.device, "iw_3f0020194")  # 0x94 margin low w/o fault
-            elif self.cb_mon.currentText() == "Margin Low with fault":
-                pmbus.configure_command(pmbus.device, "iw_3f0020198")  # 0x98 margin low with fault
-            elif self.cb_mon.currentText() == "Margin High w/o fault":
-                pmbus.configure_command(pmbus.device, "iw_3f00201A4")  # 0xA4 margin high w/o fault
-            elif self.cb_mon.currentText() == "Margin High with fault":
-                pmbus.configure_command(pmbus.device, "iw_3f00201A8")  # 0xA8 margin high with fault
-        self.index_oper_cmd = not self.index_oper_cmd
-
-    def display_plot(self, name, value):
-        group_box = QtGui.QGroupBox(name)
-        group_layout = QtGui.QHBoxLayout()
-        # add plot diagram to graph_frame
-        self.graph = Monitoring.GraphCanvas(value)
-        self.graph.setMinimumSize(200, 400)
-        group_layout.addWidget(self.graph)
-        group_box.setLayout(group_layout)
-        self.scroll_layout.addWidget(group_box)
-
     def info_panel(self):
 
         self.info_frame = QtGui.QFrame(self.central_widget)
@@ -1113,18 +872,9 @@ class GuiMainWindow(QtGui.QMainWindow):
         # device info - left panel
         self.info_panel()
 
-        exitAction = QtGui.QAction(QtGui.QIcon('exit.png'), '&Exit', self)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(QtGui.qApp.quit)
-
         # menu bar & status bar
         main_window.setCentralWidget(self.central_widget)
-        self.menu_bar = QtGui.QMenuBar(main_window)
-        self.menu_bar.addMenu('&File')
-        self.menu_bar.addAction(exitAction)
-        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 901, 21))
-        main_window.setMenuBar(self.menu_bar)
+
         self.status_bar = QtGui.QStatusBar(main_window)
         main_window.setStatusBar(self.status_bar)
 

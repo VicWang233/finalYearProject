@@ -12,10 +12,10 @@ from PyQt4 import QtCore, QtGui
 import LinearConversions
 import Monitoring
 from PMBusCall import pmbus
+import ftd2xx
 import Gui
 import functools
 import string
-
 
 class GuiFunctionality(Gui.GuiMainWindow):
 
@@ -404,7 +404,7 @@ class GuiFunctionality(Gui.GuiMainWindow):
         # set read button
         cmd_hex = code_val[2:]
         arg1 = functools.partial(self.handle_rd_direct, cmd_hex, size_val)
-        if pmbus.device == None:
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
             self.read_direct.setEnabled(False)
         elif code_val is not self.write_only:
             self.read_direct.setEnabled(True)
@@ -414,7 +414,7 @@ class GuiFunctionality(Gui.GuiMainWindow):
 
         # set write button
         arg2 = functools.partial(self.handle_wr_direct, cmd_hex)
-        if pmbus.device == None:
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
             self.write_direct.setEnabled(False)
         elif code_val is not self.read_only:
             self.write_direct.setEnabled(True)
@@ -459,26 +459,19 @@ class GuiFunctionality(Gui.GuiMainWindow):
         #  WRITE NEW CONFIGURATION TO THE DEVICE
         #  GET INFO FROM ALL TEXT FIELDS
         #
-
         # convert margin high and margin low values fom percentages back to floats
         marg_low_val = float(self.vout_nom.text()) - (float(self.vout_nom.text()) * (float(self.marg_low.text()) / 100))
         marg_high_val = float(self.vout_nom.text()) + (float(self.vout_nom.text()) * (float(self.marg_high.text()) / 100))
 
         values_l11 = [self.ton_delay.text(), self.ton_rise.text(), self.ton_max.text(),
                       self.toff_delay.text(), self.toff_fall.text(), self.toff_max.text(),
-                      self.iout_oc_fault.text(), self.iout_oc_warning.text(), self.temp_ot_fault.text(),
-                      self.temp_ot_warning.text(), self.vin_ov_fault.text(), self.vin_ov_warning.text(),
-                      self.vin_uv_warning.text(), self.vin_uv_fault.text(), self.vin_on.text(),
-                      self.vin_off.text()]
+                      self.vin_on.text(), self.vin_off.text()]
 
-        values_l16 = [self.vout_nom.text(), self.marg_high.text(), self.marg_low.text(),
-                      self.vout_ov_fault.text(), self.vout_ov_warning.text(), self.vout_uv_warning.text(),
-                      self.vout_uv_fault.text(), self.power_on.text(), self.power_off.text(),
+        values_l16 = [self.vout_nom.text(), self.power_on.text(), self.power_off.text(),
                       str(marg_high_val), str(marg_low_val)]
 
-        pmbus_l11_hex_codes = ["60", "61", "62", "64", "65", "66", "66", "46", "4A",
-                               "4F", "51", "55", "57", "58", "59", "35", "36"]
-        pmbus_l16_hex_codes = ["21", "25", "26", "40", "42", "43", "44", "5E", "5F", "25", "26"]
+        pmbus_l11_hex_codes = ["60", "61", "62", "64", "65", "66", "35", "36"]
+        pmbus_l16_hex_codes = ["21", "5E", "5F", "25", "26"]
 
         vout_ov_fault_response = bin(self.num_resp_a)[2:].zfill(2)
         vout_ov_fault_retries = bin(self.num_retries_a)[2:].zfill(3)
@@ -510,23 +503,52 @@ class GuiFunctionality(Gui.GuiMainWindow):
         temp_ot_fault_delay = bin(self.num_delay_f)[2:].zfill(3)
         temp_ot_to_send = self.bin_to_hex(temp_ot_fault_response + temp_ot_fault_retries + temp_ot_fault_delay)
 
-        protection_responses = [vout_ov_to_send, vout_uv_to_send, vin_ov_to_send, vin_uv_to_send,
-                                iout_oc_to_send, temp_ot_to_send]
-        response_pmbus_codes = ["41", "45", "56", "5A", "47", "50"]
+        vout_ov_protection = [self.vout_ov_fault.text(), self.vout_ov_warning.text(), vout_ov_to_send]
+        vout_uv_protection = [self.vout_uv_fault.text(), self.vout_uv_warning.text(), vout_uv_to_send]
+        vin_ov_protection = [self.vin_ov_fault.text(), self.vin_ov_warning.text(), vin_ov_to_send]
+        vin_uv_protection = [self.vin_uv_fault.text(), self.vin_uv_warning.text(), vin_uv_to_send]
+        iout_oc_protection = [self.iout_oc_fault.text(), self.iout_oc_warning.text(), iout_oc_to_send]
+        temp_ot_protection = [self.temp_ot_fault.text(), self.temp_ot_warning.text(), temp_ot_to_send]
+
+        vout_ov_code = ["40", "42", "41"]
+        vout_uv_code = ["44", "46", "45"]
+        vin_ov_code = ["55", "57", "56"]
+        vin_uv_code = ["59", "58", "5A"]
+        iout_oc_code = ["46", "4A", "47"]
+        temp_ot_code = ["4F", "51", "50"]
 
         # write to the device only if all parameters are entered correctly
         if self.write_ok and self.write_ok_ov and self.write_ok_uv and self.write_ok_temp:
-            for value, code in zip(protection_responses, response_pmbus_codes):
-                pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+            # write particular parameter only when "enable" checkbox is checked
+            if self.vout_ov_enable:
+                for value, code in zip(vout_ov_protection, vout_ov_code):
+                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+            if self.vout_uv_enable:
+                for value, code in zip(vout_uv_protection, vout_uv_code):
+                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+            if self.vin_ov_enable:
+                for value, code in zip(vin_ov_protection, vin_ov_code):
+                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+            if self.vin_uv_enable:
+                for value, code in zip(vin_uv_protection, vin_uv_code):
+                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+            if self.iout_oc_enable:
+                for value, code in zip(iout_oc_protection, iout_oc_code):
+                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+            if self.temp_ot_enable:
+                for value, code in zip(temp_ot_protection, temp_ot_code):
+                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
 
+            # write other L11 commands
             for value, code in zip(values_l11, pmbus_l11_hex_codes):
                 pmbus.l11_write_command(pmbus.device, "iw_3f003" + code, float(value))
 
+            # write other L16 commands
             for value, code in zip(values_l16, pmbus_l16_hex_codes):
                 pmbus.l16_write_command(pmbus.device, "iw_3f003" + code, float(value))
 
     def bin_to_hex(self, s):
-        
+
         return ''.join(["%x" % string.atoi(b, 2) for b in s.split()])
 
     def popup(self, message, val, sign):

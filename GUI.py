@@ -32,7 +32,6 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-
 class GuiMainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
@@ -123,7 +122,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.schematic.setGeometry(QtCore.QRect(20, 20, 695, 409))
         pix_map = QtGui.QPixmap('diagrams/blockdiagram-em2130.jpg')
         self.schematic.setPixmap(pix_map)
-        self.schematic.setStatusTip('EM2130 Circuit Diagram')
+        self.schematic.setStatusTip('EM2130L recommended application circuit')
         self.schematic.setStyleSheet('border: 1px solid rgb(147, 147, 147)')
 
         # voltage group box
@@ -139,6 +138,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.vin_nom.setReadOnly(True)
         self.vin_nom.setStatusTip('Nominal input voltage is 12V')
         self.vout_nom = self.create_line_edit(vout_val)
+        self.vout_nom.textChanged.connect(self.check_range)
         self.vout_nom.setStatusTip('Enter here the nominal output voltage')
         self.marg_high = self.create_line_edit(str(round(perc_increase)))
         self.marg_high.textChanged.connect(self.check_range)
@@ -218,8 +218,11 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.cb = QtGui.QComboBox()
         self.cb.setStatusTip('Select the starting condition for the sequencer')
         self.cb.addItem("CTRL_POS")
+        self.cb.setItemData(0, "Device turn on/off by CONTROL pin, upon positive transition detection", QtCore.Qt.ToolTipRole)
         self.cb.addItem("CTRL_NEG")
+        self.cb.setItemData(1, "Device turn on/off by CONTROL pin, upon negative transition detection", QtCore.Qt.ToolTipRole)
         self.cb.addItem("OPERATION_CMD")
+        self.cb.setItemData(2, "Device turn on/off controlled by PMBus" + u"\u2122" + " OPERATION command", QtCore.Qt.ToolTipRole)
         self.cb.currentIndexChanged.connect(self.selection_change)
 
         grid = QtGui.QGridLayout()
@@ -308,7 +311,7 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         self.stacked_widget.addWidget(self.page_2)
 
-    def page3_pin(self):
+    def page3_tuning(self):
 
         # create page 3
         self.page_3 = QtGui.QWidget()
@@ -382,7 +385,7 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         # set combo box for pmbus commands
         self.pmbus_cb = QtGui.QComboBox()
-        self.pmbus_cb.setStatusTip('\Select PmBus command from the list')
+        self.pmbus_cb.setStatusTip("Select PmBus command" + u"\u2122" + " from the list")
         for key, value in self.dict.iteritems():
             self.pmbus_cb.addItem(key)
         self.pmbus_cb.currentIndexChanged.connect(self.selection_pmbus_commands)
@@ -473,8 +476,8 @@ class GuiMainWindow(QtGui.QMainWindow):
         # create page 4
         self.page_4 = QtGui.QWidget()
 
-        first_tip = 'The PMBus device continues operation without interruption.'
-        second_tip = ('The PMBus device continues operation for the delay time specified.\n'
+        first_tip = 'The device continues operation without interruption.'
+        second_tip = ('The device continues operation for the delay time specified.\n'
                       'If the fault condition is still present at the end of the delay time,\n'
                       'the unit responds as programmed in the retry setting.')
         third_tip = 'The device shuts down and responds according to the retry setting.'
@@ -482,7 +485,7 @@ class GuiMainWindow(QtGui.QMainWindow):
                       'Operation resumes and the output is enabled when the fault condition no longer exists.')
 
         retries = ['None', '1', '2', '3', '4', '5', '6', 'Infinity']
-        resposes = ['Continue', 'Delay and retry', 'Retry only', 'Device shut down']
+        resposes = ['Continue', 'Delay and retry', 'Retry only', 'Device shutdown']
         item_data = [first_tip, second_tip, third_tip, fourth_tip]
         delays = ['0.00', '1.50', '3.00', '4.50', '6.00', '7.50', '9.00', '10.50']
 
@@ -492,11 +495,29 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         # check boxes
         self.vout_ov_enable = self.create_checkbox()
+        self.vout_ov_enable.setStatusTip(
+            'Enable VOUT_OV protection settings. When disabled'
+            ' VOUT_OV protection settings will not be written to the device')
         self.vout_uv_enable = self.create_checkbox()
+        self.vout_uv_enable.setStatusTip(
+            'Enable VOUT_UV protection settings. When disabled'
+            ' VOUT_UV protection settings will not be written to the device')
         self.vin_ov_enable = self.create_checkbox()
+        self.vin_ov_enable.setStatusTip(
+            'Enable VIN_OV protection settings. When disabled'
+            ' VIN_OV protection settings will not be written to the device')
         self.vin_uv_enable = self.create_checkbox()
+        self.vin_uv_enable.setStatusTip(
+            'Enable VIN_UV protection settings. When disabled'
+            ' VIN_UV protection settings will not be written to the device')
         self.temp_ot_enable = self.create_checkbox()
+        self.temp_ot_enable.setStatusTip(
+            'Enable TEMP_OT protection settings. When disabled'
+            ' TEMP_OT protection settings will not be written to the device')
         self.iout_oc_enable = self.create_checkbox()
+        self.iout_oc_enable.setStatusTip(
+            'Enable IOUT_OC protection settings. When disabled'
+            ' IOUT_OC protection settings will not be written to the device')
 
         # combo-boxes for delay time units
         self.vout_ov_delay = QtGui.QComboBox()
@@ -744,18 +765,20 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         # create monitoring box
         self.monitoring_box = QtGui.QGroupBox(self.page_5)
-        self.size_and_name(self.monitoring_box, 19, 9, 970, 535, "PMBus Status Information")
+        self.size_and_name(self.monitoring_box, 19, 9, 970, 535, "Real Time Readings")
 
         # clear faults button
         self.clear_faults_but = QtGui.QPushButton(self.monitoring_box)
         self.clear_faults_but.setGeometry(QtCore.QRect(20, 240, 100, 23))
         self.clear_faults_but.setText("Clear Faults")
+        self.clear_faults_but.setStatusTip('Clears all of the warning or fault bits set in the status registers')
         self.clear_faults_but.clicked.connect(self.handle_clear_faults)
 
         # device startup
         self.control_pin = QtGui.QPushButton(self.monitoring_box)
         self.control_pin.setGeometry(QtCore.QRect(20, 280, 100, 23))
         self.control_pin.setText("Control Pin")
+        self.control_pin.setStatusTip('Turn on/off the device by toggling the Control Pin')
         self.control_pin.clicked.connect(self.handle_control_pin)
         self.index_pin = 1
 
@@ -764,6 +787,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.operation_cmd.setGeometry(QtCore.QRect(20, 320, 100, 23))
         self.operation_cmd.setText("OPERATION_CMD")
         self.operation_cmd.setEnabled(False)
+        self.operation_cmd.setStatusTip('Turn on/off the device by sending PMBus OPERATION command')
         self.operation_cmd.clicked.connect(self.handle_operation_cmd)
         self.index_oper_cmd = 1
 
@@ -782,6 +806,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.monitoring_but = QtGui.QPushButton(self.monitoring_box)
         self.monitoring_but.setGeometry(QtCore.QRect(20, 400, 100, 23))
         self.monitoring_but.setText("Monitoring")
+        self.monitoring_but.setStatusTip('Turn on/off the real time plotting')
         self.monitoring_but.clicked.connect(self.mon_on_off)
 
         self.led = QtGui.QLabel(self.monitoring_box)
@@ -794,6 +819,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.write_volatile = QtGui.QPushButton(self.monitoring_box)
         self.write_volatile.setGeometry(QtCore.QRect(20, 440, 100, 23))
         self.write_volatile.setText("Write volatile")
+        self.operation_cmd.setStatusTip('Save all new settings to the device\'s volatile memory')
         self.write_volatile.setStyleSheet("background-color: yellow")
         self.write_volatile.clicked.connect(self.write_to_device)
 
@@ -828,14 +854,19 @@ class GuiMainWindow(QtGui.QMainWindow):
 
     def info_panel(self):
 
+        info = ("EM2130L\n"
+                "Step-Down DC-DC\n"
+                "Switching Converter\n"
+                "with\nIntegrated Inductor,\n"
+                "Featuring\nDigital Control\n"
+                "with PMBus" + u"\u2122" + " v1.2\n"
+                "compliant Interface\n")
         self.info_frame = QtGui.QFrame(self.central_widget)
         self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 645))
-        #version = pmbus.configure_command(pmbus.device, "v")
-        version = "0"
         self.create_label(self.info_frame, 20, 30, 61, 20, "Device Info:")
         self.text_browser = QtGui.QTextBrowser(self.info_frame)
         self.text_browser.setGeometry(QtCore.QRect(20, 70, 121, 192))
-        self.create_label(self.text_browser, 10, 40, 100, 100, "EM2130L\nPMW Controller\n")
+        self.create_label(self.text_browser, 10, 10, 100, 200, info)
 
     def setupUi(self, main_window):
 
@@ -861,7 +892,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.page2_configuration()
 
         # create page3
-        self.page3_pin()
+        self.page3_tuning()
 
         # create page4
         self.page4_protection()

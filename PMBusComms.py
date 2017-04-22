@@ -16,6 +16,14 @@ import re
 
 class PMBusComms:
 
+    ###############################################################################################################
+    #                                            CLASS INIT DEFINITION                                            #
+    #                                                                                                             #
+    #  Description: define what actions are performed on initialization (connect with and setup the device)       #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def __init__(self):
 
         # list devices by description, returns tuple of attached devices description strings
@@ -44,6 +52,14 @@ class PMBusComms:
             print "Unable to open 'EM2130 device'."
             self.device = ftd2xx.ftd2xx.DEVICE_NOT_FOUND
 
+    ###############################################################################################################
+    #                                              SETUP DEVICE                                                   #
+    #                                                                                                             #
+    #  Description: setup of the device is done here (baud rate, timeouts, etc.)                                  #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def set_up_device(self):
 
         # set baud rate
@@ -61,6 +77,14 @@ class PMBusComms:
         # set chars
         self.device.setChars(0x0A, 0x7F, 0, 0)
 
+    ###############################################################################################################
+    #                                            CONFIGURE COMMAND                                                #
+    #                                                                                                             #
+    #  Description: write configurations to the device                                                            #
+    #  Arguments: device, command (the configuration specified)                                                   #
+    #  Returns: PMBus response                                                                                    #
+    ###############################################################################################################
+
     def configure_command(self, device, command):
 
         try:
@@ -72,18 +96,29 @@ class PMBusComms:
         except:
             return "0.00"
 
+    ###############################################################################################################
+    #                                            L16 QUERY COMMAND                                                #
+    #                                                                                                             #
+    #  Description: write command to the device, read the response and convert it using L16 to float              #
+    #  Arguments: device, command                                                                                 #
+    #  Returns: PMBus response as real-world value                                                                #
+    ###############################################################################################################
+
     def l16_query_command(self, device,  command):
 
         try:
-            time.sleep(0.005)
+            # send query to the device
+            time.sleep(0.005)  # allow device time between the commands
             device.write(command + "\r\n")  # 3f is my slave address
             time.sleep(0.005)
+            # read PMBus response
             response = ""
             if device.getQueueStatus() > 0:
                 response = device.read(device.getQueueStatus())
             res = response.rstrip()
+            #  print "PMBus Response = 0x" + res[1:]
 
-            #print "PMBus Response = 0x" + res[1:]
+            # convert the PMBus response to the real-world value and return
             a = response[-4:]
             b = response[1:3]
             a = a.rstrip()
@@ -91,15 +126,16 @@ class PMBusComms:
             if (re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", a) and
                     re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", b)):
                 r = int("0x" + a + b, 0)
-                #print "Block command = 0x" + a + b
+                #  print "Block command = 0x" + a + b
                 x = LinearConversions.LinearConversions()
                 result = x.l16_to_float(r)
-                #print "Result = " + str(result) + " V\n"
+                #  print "Result = " + str(result) + " V\n"
                 val = ("%.2f" % result)
                 return val
             else:
+                # if failed, retry to process the command
                 time.sleep(0.005)
-                device.write(command + "\r\n")  # 3f is my slave address
+                device.write(command + "\r\n")
                 time.sleep(0.005)
                 response = ""
                 if device.getQueueStatus() > 0:
@@ -124,34 +160,47 @@ class PMBusComms:
                     print("ERROR - Unvalid response\n")
                     return "0.0"
         except:
+            # except device is not connected
             if device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
                 return "0.00"
+
+    ###############################################################################################################
+    #                                            L11 QUERY COMMAND                                                #
+    #                                                                                                             #
+    #  Description: write command to the device, read the response and convert it using L11 to float              #
+    #  Arguments: device, command                                                                                 #
+    #  Returns: PMBus response as real-world value                                                                #
+    ###############################################################################################################
 
     def l11_query_command(self, device, command):
 
         try:
+            # send the command
             time.sleep(0.005)
             device.write(command + "\r\n")  # 3f is my slave address
             time.sleep(0.005)
+            # read the response
             response = ""
             if device.getQueueStatus() > 0:
                 response = device.read(device.getQueueStatus())
             res = response.rstrip()
-            #print "PMBus Response = 0x" + res[1:]
+            print "PMBus Response = 0x" + res[1:]
             a = response[-4:]
             b = response[1:3]
             a = a.rstrip()
             b = b.rstrip()
+            # convert to real-world value and return
             if (re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", a) and
                     re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", b)):
                 r = int("0x" + a + b, 0)
-                #print "Block command = 0x" + a + b
+                print "Block command = 0x" + a + b
                 x = LinearConversions.LinearConversions()
                 result = x.l11_to_float(r)
-                #print "Result = %.2f" % result + " V\n"
+                print "Result = %.2f" % result + " V\n"
                 val = ("%.2f" % result)
                 return val
             else:
+                # if failed, retry to process the command
                 time.sleep(0.005)
                 device.write(command + "\r\n")  # 3f is my slave address
                 time.sleep(0.005)
@@ -180,6 +229,14 @@ class PMBusComms:
             if device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
                 return "0.00"
 
+    ###############################################################################################################
+    #                                            L11 WRITE COMMAND                                                #
+    #                                                                                                             #
+    #  Description: convert real-world value to L11 and write it to the device                                    #
+    #  Arguments: device, command, real-world value to write                                                      #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def l11_write_command(self, device, command, value):
 
         try:
@@ -195,7 +252,15 @@ class PMBusComms:
             time.sleep(0.005)  # allow 5ms delay between the commands
             device.read(device.getQueueStatus())
         except:
-            print "no dev"
+            print "No device connected"
+
+    ###############################################################################################################
+    #                                            L16 WRITE COMMAND                                                #
+    #                                                                                                             #
+    #  Description: convert real-world value to L16 and write it to the device                                    #
+    #  Arguments: device, command, real-world value to write                                                      #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
 
     def l16_write_command(self, device, command, value):
 
@@ -212,7 +277,16 @@ class PMBusComms:
             time.sleep(0.005)  # allow 5ms delay between the commands
             device.read(device.getQueueStatus())
         except:
-            print "no dev"
+            print "No device connected"
+
+    ###############################################################################################################
+    #                                            WRITE DIRECT COMMAND                                             #
+    #                                                                                                             #
+    #  Description: write value in hex to the device                                                              #
+    #  (there is no need for conversion here, as the value that is send is already L11 or L16 value)              #
+    #  Arguments: device, command, L11 or L16 value to be send                                                    #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
 
     def write_direct(self, device, command, hex_val):
 
@@ -227,6 +301,6 @@ class PMBusComms:
             time.sleep(0.005)  # allow 5ms delay between the commands
             device.read(device.getQueueStatus())
         except:
-            print "no dev"
+            print "No device connected"
 
 

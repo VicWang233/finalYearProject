@@ -5,7 +5,7 @@
 #                     Author: Angelika Kosciolek                    #
 #                             05/03/2017                            #
 #                                                                   #
-#             Description: GUI Application Layout                   #
+#             Description: GUI Application Layout Class             #
 #                                                                   #
 #####################################################################
 
@@ -32,11 +32,28 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
+
 class GuiMainWindow(QtGui.QMainWindow):
+
+    ###############################################################################################################
+    #                                            CLASS INIT DEFINITION                                            #
+    #                                                                                                             #
+    #  Description: set GuiMainWindow as super class                                                              #
+    #  Arguments: parent=None                                                                                     #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
 
     def __init__(self, parent=None):
         super(GuiMainWindow, self).__init__(parent)
         self.setParent(parent)
+
+    ###############################################################################################################
+    #                                            SET STYLE                                                        #
+    #                                                                                                             #
+    #  Description: set size, colour and style of the application                                                 #
+    #  Arguments: main_window - main application frame                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
 
     def set_style(self, main_window):
         main_window.resize(1200, 700)
@@ -71,6 +88,14 @@ class GuiMainWindow(QtGui.QMainWindow):
                                             "background-color:rgb(220, 228, 244);\n"
                                             "border: 1px solid rgb(147, 147, 147)}\n"))
 
+    ###############################################################################################################
+    #                                                  MENU                                                       #
+    #                                                                                                             #
+    #  Description: set button menu                                                                               #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def menu(self):
 
         # create new buttons_frame and put menu buttons in there
@@ -94,6 +119,14 @@ class GuiMainWindow(QtGui.QMainWindow):
         # "monitor" button
         mon = self.create_button_tab(810, 10, 190, 51, "Monitoring", self.page5, "icons/mon.png")
         mon.setStatusTip("Device's monitoring")
+
+    ###############################################################################################################
+    #                                                  PAGE 1                                                     #
+    #                                                                                                             #
+    #  Description: create first page of the GUI                                                                  #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
 
     def page1_main(self):
 
@@ -166,6 +199,14 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         self.stacked_widget.addWidget(self.page)
 
+    ###############################################################################################################
+    #                                                  PAGE 2                                                     #
+    #                                                                                                             #
+    #  Description: create second page of the GUI                                                                 #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def page2_configuration(self):
 
         # create page 2
@@ -223,7 +264,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.cb.setItemData(1, "Device turn on/off by CONTROL pin, upon negative transition detection", QtCore.Qt.ToolTipRole)
         self.cb.addItem("OPERATION_CMD")
         self.cb.setItemData(2, "Device turn on/off controlled by PMBus" + u"\u2122" + " OPERATION command", QtCore.Qt.ToolTipRole)
-        self.cb.currentIndexChanged.connect(self.selection_change)
+        self.cb.currentIndexChanged.connect(self.startup_selection_change)
 
         grid = QtGui.QGridLayout()
         grid.setSpacing(20)
@@ -310,6 +351,14 @@ class GuiMainWindow(QtGui.QMainWindow):
                                               "VOUT ON \n" + vout_on_val + " V")
 
         self.stacked_widget.addWidget(self.page_2)
+
+    ###############################################################################################################
+    #                                                  PAGE 3                                                     #
+    #                                                                                                             #
+    #  Description: create third page of the GUI                                                                  #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
 
     def page3_tuning(self):
 
@@ -470,6 +519,14 @@ class GuiMainWindow(QtGui.QMainWindow):
         grid3.addWidget(QtGui.QLabel("  "), 3, 0)
 
         self.stacked_widget.addWidget(self.page_3)
+
+    ###############################################################################################################
+    #                                                  PAGE 4                                                     #
+    #                                                                                                             #
+    #  Description: create fourth page of the GUI                                                                 #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
 
     def page4_protection(self):
 
@@ -758,6 +815,14 @@ class GuiMainWindow(QtGui.QMainWindow):
         protection_box.setLayout(grid)
         self.stacked_widget.addWidget(self.page_4)
 
+    ###############################################################################################################
+    #                                                  PAGE 5                                                     #
+    #                                                                                                             #
+    #  Description: create fifth page of the GUI                                                                  #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def page5_monitor(self):
 
         # create page 5
@@ -852,6 +917,14 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.monitoring_frame.setLayout(layout)
         self.stacked_widget.addWidget(self.page_5)
 
+    ###############################################################################################################
+    #                                              INFO PANEL                                                     #
+    #                                                                                                             #
+    #  Description: create side info panel of the GUI                                                             #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def info_panel(self):
 
         info = ("EM2130L\n"
@@ -868,7 +941,15 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.text_browser.setGeometry(QtCore.QRect(20, 70, 121, 192))
         self.create_label(self.text_browser, 10, 10, 100, 200, info)
 
-    def setupUi(self, main_window):
+    ###############################################################################################################
+    #                                               SETUP GUI                                                     #
+    #                                                                                                             #
+    #  Description: generate all components of the GUI                                                            #
+    #  Arguments: main_window - main application frame                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
+    def setup_gui(self, main_window):
 
         # set style of the main window
         self.set_style(main_window)
@@ -911,17 +992,30 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
+    ###############################################################################################################
+    #                                              PAGE 1 - 5                                                     #
+    #                                                                                                             #
+    #  Description: connect each page with the correct index of the Qt stacked-widget                             #
+    #  Arguments: none                                                                                            #
+    #  Returns: none                                                                                              #
+    ###############################################################################################################
+
     def page1(self):
+
         self.stacked_widget.setCurrentIndex(0)
 
     def page2(self):
+
         self.stacked_widget.setCurrentIndex(1)
 
     def page3(self):
+
         self.stacked_widget.setCurrentIndex(2)
 
     def page4(self):
+
         self.stacked_widget.setCurrentIndex(3)
 
     def page5(self):
+
         self.stacked_widget.setCurrentIndex(4)

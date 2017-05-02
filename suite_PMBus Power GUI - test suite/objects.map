@@ -1,0 +1,175 @@
+:Direct Access Functions.Code:_QLabel	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='Code:' type='QLabel' unnamed='1' visible='1'}
+:Direct Access Functions.Code:_QLineEdit	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' leftWidget=':Direct Access Functions.Code:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Direct Access Functions.Decimal:_QLabel	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='Decimal:' type='QLabel' unnamed='1' visible='1'}
+:Direct Access Functions.Decimal:_QLineEdit	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' leftWidget=':Direct Access Functions.Decimal:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Direct Access Functions.Hex:_QLabel	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='Hex:' type='QLabel' unnamed='1' visible='1'}
+:Direct Access Functions.Hex:_QLineEdit	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' leftWidget=':Direct Access Functions.Hex:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Direct Access Functions.L11:_QLabel	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='L11:' type='QLabel' unnamed='1' visible='1'}
+:Direct Access Functions.L11:_QLineEdit	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' leftWidget=':Direct Access Functions.L11:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Direct Access Functions.L16:_QLabel	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='L16:' type='QLabel' unnamed='1' visible='1'}
+:Direct Access Functions.L16:_QLineEdit	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' leftWidget=':Direct Access Functions.L16:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Direct Access Functions.Read_QPushButton	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='Read' type='QPushButton' unnamed='1' visible='1'}
+:Direct Access Functions.Size in Bytes:_QLabel	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='Size in Bytes:' type='QLabel' unnamed='1' visible='1'}
+:Direct Access Functions.Size in Bytes:_QLineEdit	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' leftWidget=':Direct Access Functions.Size in Bytes:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Direct Access Functions.Write:_QLabel	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='Write:' type='QLabel' unnamed='1' visible='1'}
+:Direct Access Functions.Write:_QLineEdit	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' leftWidget=':Direct Access Functions.Write:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Direct Access Functions.Write_QPushButton	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' text='Write' type='QPushButton' unnamed='1' visible='1'}
+:Direct Access Functions_QComboBox	{container=':PMBus Commands  Calculations.Direct Access Functions_QGroupBox' type='QComboBox' unnamed='1' visible='1'}
+:Input Voltage (V)_GraphCanvas	{container=':Real Time Readings.Input Voltage (V)_QGroupBox' type='GraphCanvas' unnamed='1' visible='1'}
+:Linear L11 Format Converter.Encoded hex value:_QLabel	{container=':PMBus Commands  Calculations.Linear L11 Format Converter_QGroupBox' text='Encoded hex value:' type='QLabel' unnamed='1' visible='1'}
+:Linear L11 Format Converter.Encoded hex value:_QLineEdit	{container=':PMBus Commands  Calculations.Linear L11 Format Converter_QGroupBox' leftWidget=':Linear L11 Format Converter.Encoded hex value:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Linear L11 Format Converter.Format:\t\t      L11_QLabel	{container=':PMBus Commands  Calculations.Linear L11 Format Converter_QGroupBox' text='Format:\t\t      L11' type='QLabel' unnamed='1' visible='1'}
+:Linear L11 Format Converter.Real world value:_QLabel	{container=':PMBus Commands  Calculations.Linear L11 Format Converter_QGroupBox' text='Real world value:' type='QLabel' unnamed='1' visible='1'}
+:Linear L11 Format Converter.Real world value:_QLineEdit	{aboveWidget=':Linear L11 Format Converter.Format:\t\t      L11_QLabel' container=':PMBus Commands  Calculations.Linear L11 Format Converter_QGroupBox' leftWidget=':Linear L11 Format Converter.Real world value:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Linear L16 Format Converter.Encoded hex value:_QLabel	{container=':PMBus Commands  Calculations.Linear L16 Format Converter_QGroupBox' text='Encoded hex value:' type='QLabel' unnamed='1' visible='1'}
+:Linear L16 Format Converter.Encoded hex value:_QLineEdit	{container=':PMBus Commands  Calculations.Linear L16 Format Converter_QGroupBox' leftWidget=':Linear L16 Format Converter.Encoded hex value:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Linear L16 Format Converter.Format:\t\t      L16_QLabel	{container=':PMBus Commands  Calculations.Linear L16 Format Converter_QGroupBox' text='Format:\t\t      L16' type='QLabel' unnamed='1' visible='1'}
+:Linear L16 Format Converter.Real world value:_QLabel	{container=':PMBus Commands  Calculations.Linear L16 Format Converter_QGroupBox' text='Real world value:' type='QLabel' unnamed='1' visible='1'}
+:Linear L16 Format Converter.Real world value:_QLineEdit	{aboveWidget=':Linear L16 Format Converter.Format:\t\t      L16_QLabel' container=':PMBus Commands  Calculations.Linear L16 Format Converter_QGroupBox' leftWidget=':Linear L16 Format Converter.Real world value:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:ON/OFF Levels.  _QLabel	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' occurrence='2' text='  ' type='QLabel' unnamed='1' visible='1'}
+:ON/OFF Levels.  _QLabel_2	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' occurrence='5' text='  ' type='QLabel' unnamed='1' visible='1'}
+:ON/OFF Levels.  _QLineEdit	{aboveWidget=':ON/OFF Levels.OFF Level Value_QLabel' container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' leftWidget=':ON/OFF Levels.  _QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:ON/OFF Levels.  _QLineEdit_2	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' leftWidget=':ON/OFF Levels.  _QLabel_2' type='QLineEdit' unnamed='1' visible='1'}
+:ON/OFF Levels.OFF Level Value_QLabel	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' text='OFF Level Value' type='QLabel' unnamed='1' visible='1'}
+:ON/OFF Levels.ON Level Value_QLabel	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' text='ON Level Value' type='QLabel' unnamed='1' visible='1'}
+:ON/OFF Levels.POWER OK_QLabel	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' text='POWER OK' type='QLabel' unnamed='1' visible='1'}
+:ON/OFF Levels.POWER OK_QLineEdit	{aboveWidget=':ON/OFF Levels.ON Level Value_QLabel' container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' leftWidget=':ON/OFF Levels.POWER OK_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:ON/OFF Levels.VIN_QLabel	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' text='VIN' type='QLabel' unnamed='1' visible='1'}
+:ON/OFF Levels.VIN_QLineEdit	{container=':PMBus Power GUI.ON/OFF Levels_QGroupBox' leftWidget=':ON/OFF Levels.VIN_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Commands  Calculations.Direct Access Functions_QGroupBox	{container=':PMBus Power GUI.PMBus Commands  Calculations_QGroupBox' title='Direct Access Functions' type='QGroupBox' unnamed='1' visible='1'}
+:PMBus Commands  Calculations.Linear L11 Format Converter_QGroupBox	{container=':PMBus Power GUI.PMBus Commands  Calculations_QGroupBox' title='Linear L11 Format Converter' type='QGroupBox' unnamed='1' visible='1'}
+:PMBus Commands  Calculations.Linear L16 Format Converter_QGroupBox	{container=':PMBus Power GUI.PMBus Commands  Calculations_QGroupBox' title='Linear L16 Format Converter' type='QGroupBox' unnamed='1' visible='1'}
+:PMBus Power GUI.Configuration_QToolButton	{text='Configuration' type='QToolButton' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.EM2130L\nStep-Down DC-DC\nSwitching Converter\nwith\nIntegrated Inductor,\nFeaturing\nDigital Control\nwith PMBus™ v1.2\ncompliant Interface\n_QLabel	{text='EM2130L\nStep-Down DC-DC\nSwitching Converter\nwith\nIntegrated Inductor,\nFeaturing\nDigital Control\nwith PMBus™ v1.2\ncompliant Interface\n' type='QLabel' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Main_QToolButton	{text='Main' type='QToolButton' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Monitoring_QToolButton	{text='Monitoring' type='QToolButton' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.ON/OFF Levels_QGroupBox	{title='ON/OFF Levels' type='QGroupBox' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.PMBus Commands  Calculations_QGroupBox	{title='PMBus Commands  Calculations' type='QGroupBox' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.PMBus Protection Parameters_QGroupBox	{title='PMBus Protection Parameters' type='QGroupBox' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.PMBus™ device\nnot connected!_QLabel	{text='PMBus™ device\nnot connected!' type='QLabel' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Parameters_QGroupBox	{title='Parameters' type='QGroupBox' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Power Stage_QGroupBox	{title='Power Stage' type='QGroupBox' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Protection_QToolButton	{text='Protection' type='QToolButton' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Real Time Readings_QGroupBox	{title='Real Time Readings' type='QGroupBox' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Sequencing Diagram_QGroupBox	{title='Sequencing Diagram' type='QGroupBox' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI.Tuning_QToolButton	{text='Tuning' type='QToolButton' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Power GUI_QMainWindow	{type='QMainWindow' unnamed='1' visible='1' windowTitle='PMBus Power GUI'}
+:PMBus Power GUI_QWidget	{type='QWidget' unnamed='1' visible='1' window=':PMBus Power GUI_QMainWindow'}
+:PMBus Protection Parameters.A_QComboBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.A_QLabel_2' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.A_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='A' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.A_QLabel_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='2' text='A' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.A_QLineEdit	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.A_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Delay_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='Delay' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Enable_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='Enable' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Fault Limit_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='Fault Limit' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.IOUT_QCheckBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.IOUT_QLabel' type='QCheckBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.IOUT_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='IOUT' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Number of Retries_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='Number of Retries' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.TEMP_QCheckBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.TEMP_QLabel' type='QCheckBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.TEMP_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='TEMP' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Type of Response_QComboBox	{aboveWidget=':PMBus Protection Parameters.Type of Response_QLabel' container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Type of Response_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='Type of Response' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VIN OV_QCheckBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.VIN OV_QLabel' type='QCheckBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VIN OV_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='VIN OV' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VIN UV_QCheckBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.VIN UV_QLabel' type='QCheckBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VIN UV_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='VIN UV' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VOUT OV_QCheckBox	{aboveWidget=':PMBus Protection Parameters.Enable_QLabel' container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.VOUT OV_QLabel' type='QCheckBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VOUT OV_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='VOUT OV' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VOUT UV_QCheckBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.VOUT UV_QLabel' type='QCheckBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.VOUT UV_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='VOUT UV' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QComboBox	{aboveWidget=':PMBus Protection Parameters.Delay_QLabel' container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel_5' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QComboBox_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel_6' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QComboBox_3	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel_7' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QComboBox_4	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel_8' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='3' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel_3	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='5' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel_4	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='7' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel_5	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='2' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel_6	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='4' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel_7	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='6' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLabel_8	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='8' text='V' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLineEdit	{aboveWidget=':PMBus Protection Parameters.Fault Limit_QLabel' container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLineEdit_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel_2' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLineEdit_3	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel_3' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters.V_QLineEdit_4	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.V_QLabel_4' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Warning Limit_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='Warning Limit' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.Warning Limit_QLineEdit	{aboveWidget=':PMBus Protection Parameters.Warning Limit_QLabel' container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QComboBox	{aboveWidget=':PMBus Protection Parameters.Number of Retries_QLabel' container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.us_QLabel' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QComboBox_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.us_QLabel_2' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QComboBox_3	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.us_QLabel_3' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QComboBox_4	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.us_QLabel_4' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QComboBox_5	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.us_QLabel_5' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QComboBox_6	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.us_QLabel_6' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='us' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QLabel_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='2' text='us' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QLabel_3	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='3' text='us' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QLabel_4	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='4' text='us' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QLabel_5	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='5' text='us' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.us_QLabel_6	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='6' text='us' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.°C_QComboBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.°C_QLabel_2' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters.°C_QLabel	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' text='°C' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.°C_QLabel_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='2' text='°C' type='QLabel' unnamed='1' visible='1'}
+:PMBus Protection Parameters.°C_QLineEdit	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' leftWidget=':PMBus Protection Parameters.°C_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QComboBox	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='6' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QComboBox_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='9' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QComboBox_3	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='12' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QComboBox_4	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='15' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QComboBox_5	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='18' type='QComboBox' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QLineEdit	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='3' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QLineEdit_2	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='5' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QLineEdit_3	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='7' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QLineEdit_4	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='9' type='QLineEdit' unnamed='1' visible='1'}
+:PMBus Protection Parameters_QLineEdit_5	{container=':PMBus Power GUI.PMBus Protection Parameters_QGroupBox' occurrence='11' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.Device Startup:_QComboBox	{aboveWidget=':Parameters.TOFF_DELAY:_QLabel' container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.Device Startup:_QLabel' type='QComboBox' unnamed='1' visible='1'}
+:Parameters.Device Startup:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='Device Startup:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.OFF:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='OFF:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.OFF:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.OFF:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.ON:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='ON:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.ON:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.ON:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.TOFF_DELAY:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='TOFF_DELAY:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.TOFF_DELAY:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.TOFF_DELAY:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.TOFF_FALL:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='TOFF_FALL:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.TOFF_FALL:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.TOFF_FALL:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.TOFF_MAX:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='TOFF_MAX:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.TOFF_MAX:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.TOFF_MAX:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.TON_DELAY:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='TON_DELAY:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.TON_DELAY:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.TON_DELAY:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.TON_MAX:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='TON_MAX:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.TON_MAX:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.TON_MAX:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Parameters.TON_RISE:_QLabel	{container=':PMBus Power GUI.Parameters_QGroupBox' text='TON_RISE:' type='QLabel' unnamed='1' visible='1'}
+:Parameters.TON_RISE:_QLineEdit	{container=':PMBus Power GUI.Parameters_QGroupBox' leftWidget=':Parameters.TON_RISE:_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Power Stage.Voltage_QGroupBox	{container=':PMBus Power GUI.Power Stage_QGroupBox' title='Voltage' type='QGroupBox' unnamed='1' visible='1'}
+:Real Time Readings.Clear Faults_QPushButton	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='Clear Faults' type='QPushButton' unnamed='1' visible='1'}
+:Real Time Readings.Control Pin_QPushButton	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='Control Pin' type='QPushButton' unnamed='1' visible='1'}
+:Real Time Readings.IOUT:  0.00 A_QLabel	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='IOUT:  0.00 A' type='QLabel' unnamed='1' visible='1'}
+:Real Time Readings.Input Voltage (V)_QGroupBox	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' title='Input Voltage (V)' type='QGroupBox' unnamed='1' visible='1'}
+:Real Time Readings.Monitoring_QLabel	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' leftWidget=':Real Time Readings.Monitoring_QPushButton' type='QLabel' unnamed='1' visible='1'}
+:Real Time Readings.Monitoring_QPushButton	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='Monitoring' type='QPushButton' unnamed='1' visible='1'}
+:Real Time Readings.OPERATION_CMD_QComboBox	{aboveWidget=':Real Time Readings.OPERATION_CMD_QPushButton' container=':PMBus Power GUI.Real Time Readings_QGroupBox' type='QComboBox' unnamed='1' visible='1'}
+:Real Time Readings.OPERATION_CMD_QPushButton	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='OPERATION_CMD' type='QPushButton' unnamed='1' visible='1'}
+:Real Time Readings.TEMP:  0.00 °C_QLabel	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='TEMP:  0.00 °C' type='QLabel' unnamed='1' visible='1'}
+:Real Time Readings.VIN:  0.00 V_QLabel	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='VIN:  0.00 V' type='QLabel' unnamed='1' visible='1'}
+:Real Time Readings.VOUT:  0.00 V_QLabel	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='VOUT:  0.00 V' type='QLabel' unnamed='1' visible='1'}
+:Real Time Readings.Write volatile_QPushButton	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' text='Write volatile' type='QPushButton' unnamed='1' visible='1'}
+:Real Time Readings_QScrollBar	{container=':PMBus Power GUI.Real Time Readings_QGroupBox' type='QScrollBar' unnamed='1' visible='1'}
+:Sequencing Diagram.1.23_QLabel	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' text='1.23' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram.123_QLabel	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' text='123' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram.TOFF_MAX =_QLabel	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram.TON_MAX =_QLabel	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram.VOUT OFF \n V_QLabel	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram.VOUT ON \n V_QLabel	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram._QLabel	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram._QLabel_2	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' occurrence='2' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram._QLabel_3	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' occurrence='3' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram._QLabel_4	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' occurrence='4' text?='*' type='QLabel' unnamed='1' visible='1'}
+:Sequencing Diagram_Graph	{container=':PMBus Power GUI.Sequencing Diagram_QGroupBox' type='Graph' unnamed='1' visible='1'}
+:Voltage.Margin High_QLabel	{container=':Power Stage.Voltage_QGroupBox' text='Margin High' type='QLabel' unnamed='1' visible='1'}
+:Voltage.Margin High_QLineEdit	{container=':Power Stage.Voltage_QGroupBox' leftWidget=':Voltage.Margin High_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Voltage.Margin Low_QLabel	{container=':Power Stage.Voltage_QGroupBox' text='Margin Low' type='QLabel' unnamed='1' visible='1'}
+:Voltage.Margin Low_QLineEdit	{container=':Power Stage.Voltage_QGroupBox' leftWidget=':Voltage.Margin Low_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Voltage.Nominal_QLabel	{container=':Power Stage.Voltage_QGroupBox' text='Nominal' type='QLabel' unnamed='1' visible='1'}
+:Voltage.VIN_QLabel	{container=':Power Stage.Voltage_QGroupBox' text='VIN' type='QLabel' unnamed='1' visible='1'}
+:Voltage.VIN_QLineEdit	{aboveWidget=':Voltage.Nominal_QLabel' container=':Power Stage.Voltage_QGroupBox' leftWidget=':Voltage.VIN_QLabel' type='QLineEdit' unnamed='1' visible='1'}
+:Voltage.VOUT_QLabel	{container=':Power Stage.Voltage_QGroupBox' text='VOUT' type='QLabel' unnamed='1' visible='1'}
+:Voltage.VOUT_QLineEdit	{container=':Power Stage.Voltage_QGroupBox' leftWidget=':Voltage.VOUT_QLabel' type='QLineEdit' unnamed='1' visible='1'}

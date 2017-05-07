@@ -116,7 +116,7 @@ class PMBusComms:
             if device.getQueueStatus() > 0:
                 response = device.read(device.getQueueStatus())
             res = response.rstrip()
-            #  print "PMBus Response = 0x" + res[1:]
+            print "PMBus Response = 0x" + res[1:]
 
             # convert the PMBus response to the real-world value and return
             a = response[-4:]
@@ -126,10 +126,10 @@ class PMBusComms:
             if (re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", a) and
                     re.match("([a-f][0-9]|[0-9][a-f]|[0-9][0-9]|[a-f][a-f])", b)):
                 r = int("0x" + a + b, 0)
-                #  print "Block command = 0x" + a + b
+                print "Block command = 0x" + a + b
                 x = LinearConversions.LinearConversions()
                 result = x.l16_to_float(r)
-                #  print "Result = " + str(result) + " V\n"
+                print "Result = " + str(result) + " V\n"
                 val = ("%.2f" % result)
                 return val
             else:
@@ -159,7 +159,7 @@ class PMBusComms:
                 else:
                     print("ERROR - Unvalid response\n")
                     return "0.0"
-        except:
+        except AttributeError:
             # except device is not connected
             if device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
                 return "0.00"
@@ -225,7 +225,7 @@ class PMBusComms:
                 else:
                     print("ERROR - Unvalid response\n")
                     return "0.0"
-        except:
+        except AttributeError:
             if device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
                 return "0.00"
 
@@ -251,7 +251,7 @@ class PMBusComms:
             device.write(command + val + "\r\n")
             time.sleep(0.005)  # allow 5ms delay between the commands
             device.read(device.getQueueStatus())
-        except:
+        except AttributeError:
             print "No device connected"
 
     ###############################################################################################################
@@ -276,7 +276,7 @@ class PMBusComms:
             device.write(command + val + "\r\n")
             time.sleep(0.005)  # allow 5ms delay between the commands
             device.read(device.getQueueStatus())
-        except:
+        except AttributeError:
             print "No device connected"
 
     ###############################################################################################################
@@ -300,7 +300,7 @@ class PMBusComms:
             device.write(cmd)
             time.sleep(0.005)  # allow 5ms delay between the commands
             device.read(device.getQueueStatus())
-        except:
+        except AttributeError:
             print "No device connected"
 
 

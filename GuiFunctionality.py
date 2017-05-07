@@ -612,11 +612,11 @@ class GuiFunctionality(Gui.GuiMainWindow):
     def mon_on_off(self):
 
         if self.index:
-            self.pix_map = QtGui.QPixmap('icons/red.jpg')
+            self.pix_map = QtGui.QPixmap('icons/red.png')
             self.led.setPixmap(self.pix_map)
             self.timer.stop()
         else:
-            self.pix_map = QtGui.QPixmap('icons/green.jpg')
+            self.pix_map = QtGui.QPixmap('icons/green.png')
             self.led.setPixmap(self.pix_map)
             self.timer.start(1000)
         self.index = not self.index
@@ -677,41 +677,48 @@ class GuiFunctionality(Gui.GuiMainWindow):
         temp_ot_fault_delay = bin(self.num_delay_f)[2:].zfill(3)
         temp_ot_to_send = self.bin_to_hex(temp_ot_fault_response + temp_ot_fault_retries + temp_ot_fault_delay)
 
-        vout_ov_protection = [self.vout_ov_fault.text(), self.vout_ov_warning.text(), vout_ov_to_send]
-        vout_uv_protection = [self.vout_uv_fault.text(), self.vout_uv_warning.text(), vout_uv_to_send]
-        vin_ov_protection = [self.vin_ov_fault.text(), self.vin_ov_warning.text(), vin_ov_to_send]
-        vin_uv_protection = [self.vin_uv_fault.text(), self.vin_uv_warning.text(), vin_uv_to_send]
-        iout_oc_protection = [self.iout_oc_fault.text(), self.iout_oc_warning.text(), iout_oc_to_send]
-        temp_ot_protection = [self.temp_ot_fault.text(), self.temp_ot_warning.text(), temp_ot_to_send]
+        vout_ov_protection = [self.vout_ov_fault.text(), self.vout_ov_warning.text()]
+        vout_uv_protection = [self.vout_uv_fault.text(), self.vout_uv_warning.text()]
+        vin_ov_protection = [self.vin_ov_fault.text(), self.vin_ov_warning.text()]
+        vin_uv_protection = [self.vin_uv_fault.text(), self.vin_uv_warning.text()]
+        iout_oc_protection = [self.iout_oc_fault.text(), self.iout_oc_warning.text()]
+        temp_ot_protection = [self.temp_ot_fault.text(), self.temp_ot_warning.text()]
 
-        vout_ov_code = ["40", "42", "41"]
-        vout_uv_code = ["44", "46", "45"]
-        vin_ov_code = ["55", "57", "56"]
-        vin_uv_code = ["59", "58", "5A"]
-        iout_oc_code = ["46", "4A", "47"]
-        temp_ot_code = ["4F", "51", "50"]
+        vout_ov_code = ["40", "42"]
+        vout_uv_code = ["44", "46"]
+        vin_ov_code = ["55", "57"]
+        vin_uv_code = ["59", "58"]
+        iout_oc_code = ["46", "4A"]
+        temp_ot_code = ["4F", "51"]
 
         # write to the device only if all parameters are entered correctly
         if self.write_ok and self.write_ok_ov and self.write_ok_uv and self.write_ok_temp:
             # write particular parameter only when "enable" checkbox is checked
-            if self.vout_ov_enable:
+            if self.is_vout_ov_enabled:
+                pmbus.configure_command(pmbus.device, "iw_3f00241" + vout_ov_to_send)
                 for value, code in zip(vout_ov_protection, vout_ov_code):
-                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
-            if self.vout_uv_enable:
+                    pmbus.l16_write_command(pmbus.device, "iw_3f003" + code, float(value))
+            if self.is_vout_uv_enabled:
+                pmbus.configure_command(pmbus.device, "iw_3f00245" + vout_uv_to_send)
                 for value, code in zip(vout_uv_protection, vout_uv_code):
-                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
-            if self.vin_ov_enable:
+                    pmbus.l16_write_command(pmbus.device, "iw_3f003" + code, float(value))
+            if self.is_vin_ov_enabled:
+                pmbus.configure_command(pmbus.device, "iw_3f00256" + vin_ov_to_send)
                 for value, code in zip(vin_ov_protection, vin_ov_code):
-                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
-            if self.vin_uv_enable:
+                    pmbus.l11_write_command(pmbus.device, "iw_3f003" + code, float(value))
+            if self.is_vin_uv_enabled:
+                pmbus.configure_command(pmbus.device, "iw_3f0025A" + vin_uv_to_send)
                 for value, code in zip(vin_uv_protection, vin_uv_code):
-                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
-            if self.iout_oc_enable:
+                    pmbus.l11_write_command(pmbus.device, "iw_3f003" + code, float(value))
+            if self.is_iout_enabled:
+                pmbus.configure_command(pmbus.device, "iw_3f00249" + iout_oc_to_send)
                 for value, code in zip(iout_oc_protection, iout_oc_code):
-                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
-            if self.temp_ot_enable:
+                    pmbus.l11_write_command(pmbus.device, "iw_3f003" + code, float(value))
+            if self.is_temp_enabled:
+                pmbus.configure_command(pmbus.device, "iw_3f00250" + temp_ot_to_send)
                 for value, code in zip(temp_ot_protection, temp_ot_code):
-                    pmbus.configure_command(pmbus.device, "iw_3f001" + code + value)
+                    pmbus.l11_write_command(pmbus.device, "iw_3f003" + code, float(value))
+
 
             # write other L11 commands
             for value, code in zip(values_l11, pmbus_l11_hex_codes):

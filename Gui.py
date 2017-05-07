@@ -16,6 +16,7 @@ import itertools
 from collections import OrderedDict
 from operator import itemgetter
 import functools
+import ftd2xx
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -153,7 +154,7 @@ class GuiMainWindow(QtGui.QMainWindow):
         # frame for block diagram of EM2130
         self.schematic = QtGui.QLabel(self.power_stage_box)
         self.schematic.setGeometry(QtCore.QRect(20, 20, 695, 409))
-        pix_map = QtGui.QPixmap('diagrams/blockdiagram-em2130.jpg')
+        pix_map = QtGui.QPixmap('diagrams/blockdiagram-em2130.png')
         self.schematic.setPixmap(pix_map)
         self.schematic.setStatusTip('EM2130L recommended application circuit')
         self.schematic.setStyleSheet('border: 1px solid rgb(147, 147, 147)')
@@ -464,8 +465,16 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.write_hex.setStatusTip('Enter here data to write in linear format')
         self.read_direct = QtGui.QPushButton(direct_access_box)
         self.read_direct.setText("Read")
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.read_direct.setEnabled(False)
+        else:
+            self.read_direct.setEnabled(True)
         self.write_direct = QtGui.QPushButton(direct_access_box)
         self.write_direct.setText("Write")
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.write_direct.setEnabled(False)
+        else:
+            self.write_direct.setEnabled(True)
 
         # add widgets to direct_access_box
         grid.addWidget(self.pmbus_cb, 0, 0, 1, 3)
@@ -619,6 +628,7 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         for widget in self.widgets_delays:
             arg = functools.partial(self.handle_delays, widget)
+            widget.setEnabled(False)
             widget.currentIndexChanged.connect(arg)
 
         for item in retries:
@@ -631,6 +641,7 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         for widget in self.widgets_retries:
             arg = functools.partial(self.handle_retries, widget)
+            widget.setEnabled(False)
             widget.currentIndexChanged.connect(arg)
 
         for item, i, data in zip(resposes, range(len(item_data)), item_data):
@@ -838,6 +849,10 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.clear_faults_but.setText("Clear Faults")
         self.clear_faults_but.setStatusTip('Clears all of the warning or fault bits set in the status registers')
         self.clear_faults_but.clicked.connect(self.handle_clear_faults)
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.clear_faults_but.setEnabled(False)
+        else:
+            self.clear_faults_but.setEnabled(True)
 
         # device startup
         self.control_pin = QtGui.QPushButton(self.monitoring_box)
@@ -845,6 +860,10 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.control_pin.setText("Control Pin")
         self.control_pin.setStatusTip('Turn on/off the device by toggling the Control Pin')
         self.control_pin.clicked.connect(self.handle_control_pin)
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.control_pin.setEnabled(False)
+        else:
+            self.control_pin.setEnabled(True)
         self.index_pin = 1
 
         # device startup - OPERATION command
@@ -854,6 +873,10 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.operation_cmd.setEnabled(False)
         self.operation_cmd.setStatusTip('Turn on/off the device by sending PMBus OPERATION command')
         self.operation_cmd.clicked.connect(self.handle_operation_cmd)
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.operation_cmd.setEnabled(False)
+        else:
+            self.operation_cmd.setEnabled(True)
         self.index_oper_cmd = 1
 
         self.cb_mon = QtGui.QComboBox(self.monitoring_box)
@@ -873,10 +896,14 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.monitoring_but.setText("Monitoring")
         self.monitoring_but.setStatusTip('Turn on/off the real time plotting')
         self.monitoring_but.clicked.connect(self.mon_on_off)
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.monitoring_but.setEnabled(False)
+        else:
+            self.monitoring_but.setEnabled(True)
 
         self.led = QtGui.QLabel(self.monitoring_box)
         self.led.setGeometry(QtCore.QRect(140, 400, 24, 24))
-        self.pix_map = QtGui.QPixmap('icons/green.jpg')
+        self.pix_map = QtGui.QPixmap('icons/green.png')
         self.led.setPixmap(self.pix_map)
         self.index = 1
 
@@ -887,6 +914,10 @@ class GuiMainWindow(QtGui.QMainWindow):
         self.operation_cmd.setStatusTip('Save all new settings to the device\'s volatile memory')
         self.write_volatile.setStyleSheet("background-color: yellow")
         self.write_volatile.clicked.connect(self.write_to_device)
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.write_volatile.setEnabled(False)
+        else:
+            self.write_volatile.setEnabled(True)
 
         # define labels
         self.vin_average_label = self.create_label(self.monitoring_box, 20, 40, 80, 21, "VIN:  0 V")  # read vin
@@ -934,12 +965,17 @@ class GuiMainWindow(QtGui.QMainWindow):
                 "Featuring\nDigital Control\n"
                 "with PMBus" + u"\u2122" + " v1.2\n"
                 "compliant Interface\n")
+        not_connected = ("PMBus" + u"\u2122" + " device\n"
+                         "not connected!")
         self.info_frame = QtGui.QFrame(self.central_widget)
         self.info_frame.setGeometry(QtCore.QRect(10, 10, 161, 645))
         self.create_label(self.info_frame, 20, 30, 61, 20, "Device Info:")
         self.text_browser = QtGui.QTextBrowser(self.info_frame)
         self.text_browser.setGeometry(QtCore.QRect(20, 70, 121, 192))
-        self.create_label(self.text_browser, 10, 10, 100, 200, info)
+        if pmbus.device == ftd2xx.ftd2xx.DEVICE_NOT_FOUND:
+            self.create_label(self.text_browser, 10, 10, 100, 200, not_connected)
+        else:
+            self.create_label(self.text_browser, 10, 10, 100, 200, info)
 
     ###############################################################################################################
     #                                               SETUP GUI                                                     #

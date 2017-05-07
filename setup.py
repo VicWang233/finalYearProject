@@ -10,14 +10,15 @@
 
 from distutils.core import setup
 import matplotlib
+import py2exe
 
+my_data_files = matplotlib.get_py2exe_datafiles()
 
 
 setup(
     windows=[{"script": "main.py"}],
     options={
              'py2exe': {
-
                         'excludes': ['_gtkagg', '_tkagg'],
                         'dll_excludes': ['libgdk-win32-2.0-0.dll',
                                          'libgobject-2.0-0.dll',
@@ -48,5 +49,5 @@ setup(
                         'packages': ['matplotlib', 'pytz'],
                        }
             },
-    data_files=matplotlib.get_py2exe_datafiles(),
+    data_files=my_data_files,
 )

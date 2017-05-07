@@ -732,7 +732,7 @@ class GuiMainWindow(QtGui.QMainWindow):
 
         grid.setRowMinimumHeight(5, 5)
 
-        titles = ["VOUT OV", "VOUT UV", "VIN OV", "VIN UV", "IOUT", "TEMP"]
+        titles = ["VOUT OV", "VOUT UV", "VIN OV", "VIN UV", "IOUT OC", "TEMP OT"]
         widgets = [self.vout_ov_enable, self.vout_ov_warning, self.vout_ov_fault, self.vout_ov_delay,
                    self.vout_ov_retry, self.vout_ov_resp, self.vout_uv_enable, self.vout_uv_warning,
                    self.vout_uv_fault, self.vout_uv_delay, self.vout_uv_retry, self.vout_uv_resp,
